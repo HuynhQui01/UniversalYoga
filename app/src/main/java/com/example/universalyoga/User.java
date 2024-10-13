@@ -8,6 +8,19 @@ public class User {
     private String role;
     private String phone;
 
+    // Constructors
+    public User() {
+        // Default constructor required for Firebase
+    }
+
+    public User(String username, String email, String password, String role, String phone) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.phone = phone;
+    }
+
     // Getters and Setters
     public int getId() {
         return id;

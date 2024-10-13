@@ -1,5 +1,7 @@
 package com.example.universalyoga;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -8,15 +10,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,25 +27,30 @@ public class MainActivity extends AppCompatActivity {
     private int currentIndex = 0;
     private SessionManger sessionManger;
     private Button btnLogin;
-    private FirebaseAuth auth;
-
+    private Button btnCreateAcc;
+    private YogaDatabaseHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.avatar), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+
+
+
 
 
         Mapping();
 
-//        btnLogin.setOnClickListener(v -> ManageLogin());
+//        User user = new User("admin","admin@gmail.com","admin@123","admin","0000000");
+//        dbHelper.addUser(user.getUsername(),user.getEmail(),user.getPassword(),user.getRole(),user.getPhone());
 
+
+
+        btnCreateAcc.setOnClickListener(view -> {
+            Intent createAcc = new Intent(MainActivity.this, CreateAccount.class);
+            startActivity(createAcc);
+        });
 
         imageView = findViewById(R.id.imgMain);
 
@@ -59,89 +64,63 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-
         handler.post(runnable);
 
         TextView lbAppName = findViewById(R.id.lbAppName);
         lbAppName.setText(R.string.app_name);
 
-        YogaDatabaseHelper dbHelper = new YogaDatabaseHelper(this);
+        dbHelper = new YogaDatabaseHelper(this);
     }
 
-protected void onStart(){
+    @Override
+    protected void onStart() {
         super.onStart();
-    FirebaseUser curUser = auth.getCurrentUser();
-    if(curUser!=null){
-        btnLogin.setText("Logout");
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FirebaseAuth.getInstance().signOut();
-                btnLogin.setText("Login");
-            }
-        });
-    }else {
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent messageIntent = new Intent(MainActivity.this, LoginActivity.class);
-                startActivity(messageIntent);
-                btnLogin.setText("Logout");
-            }
-        });
+        ManageLoginState();
     }
-}
 
-protected void onStop(){
-        super.onStop();
-    FirebaseUser curUser = auth.getCurrentUser();
-    if(curUser!=null){
-        btnLogin.setText("Logout");
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FirebaseAuth.getInstance().signOut();
-                btnLogin.setText("Login");
+    private void ManageLoginState() {
+
+
+        String username = dbHelper.getUsernameByEmail(sessionManger.getUserEmail(this));
+
+        if (username != null) {
+            if(!dbHelper.getUserRoleByEmail(sessionManger.getUserEmail(MainActivity.this)).equals("admin")){
+                btnCreateAcc.setVisibility(View.INVISIBLE);
             }
-        });
-    }else {
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent messageIntent = new Intent(MainActivity.this, LoginActivity.class);
-                startActivity(messageIntent);
-                btnLogin.setText("Logout");
-            }
-        });
+            btnLogin.setText(username);
+            btnLogin.setOnClickListener(view -> showLogoutConfirmationDialog());
+            Toast.makeText(MainActivity.this, username, Toast.LENGTH_SHORT).show();
+
+        } else {
+            btnCreateAcc.setVisibility(View.INVISIBLE);
+            Toast.makeText(MainActivity.this, "aaaaaaaaaa", Toast.LENGTH_SHORT).show();
+
+            btnLogin.setText("Login");
+            btnLogin.setOnClickListener(view -> {
+                Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
+                startActivity(loginIntent);
+            });
+        }
     }
-}
 
-//    void ManageLogin(){
-//        FirebaseUser curUser = auth.getCurrentUser();
-//        if(curUser!=null){
-//            btnLogin.setText("Logout");
-//            btnLogin.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View view) {
-//                    FirebaseAuth.getInstance().signOut();
-//                    btnLogin.setText("Login");
-//                }
-//            });
-//        }else {
-//            btnLogin.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View view) {
-//                    Intent messageIntent = new Intent(MainActivity.this, LoginActivity.class);
-//                    startActivity(messageIntent);
-//                    btnLogin.setText("Logout");
-//                }
-//            });
-//        }
-//    }
+    private void showLogoutConfirmationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setMessage("Are you sure you want to logout?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", (dialog, id) -> {
+                    sessionManger.logoutUser(this);
+                    btnLogin.setText("Login");
+                    ManageLoginState();
+                })
+                .setNegativeButton("No", (dialog, id) -> dialog.cancel());
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
 
-    void Mapping(){
+    private void Mapping() {
         btnLogin = findViewById(R.id.btnMainLogin);
         sessionManger = new SessionManger();
-        auth = FirebaseAuth.getInstance();
+        btnCreateAcc = findViewById(R.id.btnCreateAcc);
+        dbHelper = new YogaDatabaseHelper(this);
     }
 }

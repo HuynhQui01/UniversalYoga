@@ -1,5 +1,6 @@
 package com.example.universalyoga;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -28,29 +29,17 @@ public class LoginActivity extends AppCompatActivity {
     EditText edtPassword;
     Button btnLogin;
     SessionManger sessionManger;
-    YogaDatabaseHelper dbhelper;
-    private FirebaseAuth mAuth;
-    private FirebaseUser curUser;
-    private FirebaseAuth.AuthStateListener authStateListener;
+    YogaDatabaseHelper dbHelper;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.login);
-        mAuth = FirebaseAuth.getInstance();
-        authStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
 
-                    Log.d("Login", "User is signed in: " + user.getUid());
-                } else {
-
-                    Log.d("Login", "User is signed out");
-                }
-            }
-        };
         Mapping();
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
@@ -58,60 +47,38 @@ public class LoginActivity extends AppCompatActivity {
             public void onClick(View view) {
                 String email = edtUserName.getText().toString();
                 String password = edtPassword.getText().toString();
-                signIn(email, password);
+
+
+                if (email.isEmpty() || password.isEmpty()) {
+                    Toast.makeText(LoginActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+
+                if (dbHelper.checkUser(email, password)) {
+
+                    sessionManger.saveLoginStatus(LoginActivity.this, true);
+                    sessionManger.setUserEmail(LoginActivity.this, email );
+                    Toast.makeText(LoginActivity.this, "Login succesfully!", Toast.LENGTH_SHORT).show();
+                    finish();
+
+                } else {
+                    Toast.makeText(LoginActivity.this, "Invalid credentials", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
 
     }
 
-     public FirebaseUser GetCurrentUser(){
-        return curUser;
-    }
 
 
-    public void onStart() {
-        super.onStart();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            curUser = currentUser;
-        }
-
-    }
-    @Override
-    protected void onStop() {
-        super.onStop();
-        // Hủy đăng ký listener khi hoạt động dừng
-        if (authStateListener != null) {
-            mAuth.removeAuthStateListener(authStateListener);
-        }
-    }
-
-    private void signIn(String email, String password) {
-        mAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            Log.d("Login", "signInWithEmail:success");
-                            finish();
-                            // Redirect to another activity if needed
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w("Login", "signInWithEmail:failure", task.getException());
-                            Toast.makeText(LoginActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-    }
 
     void Mapping(){
         edtUserName = findViewById(R.id.edtUserName);
         edtPassword = findViewById(R.id.edtPass);
         btnLogin = findViewById(R.id.btnLogin);
         sessionManger = new SessionManger();
-        dbhelper = new YogaDatabaseHelper(this);
+        dbHelper = new YogaDatabaseHelper(this);
     }
 }

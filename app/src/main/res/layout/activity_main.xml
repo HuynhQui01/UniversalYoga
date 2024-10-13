@@ -21,6 +21,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:text="Login"
+        android:padding="10dp"
         android:background="@color/md_theme_inversePrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -52,21 +53,26 @@
 
     <ImageView
         android:id="@+id/imgMain"
-        android:layout_width="436dp"
-        android:layout_height="314dp"
+        android:layout_width="392dp"
+        android:layout_height="284dp"
         android:layout_marginTop="42dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/materialToolbar"
         app:srcCompat="@drawable/yoga1" />
 
-    <TextView
-        android:id="@+id/lbCourse"
+    <Button
+        android:id="@+id/btnCreateAcc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Course"
-        android:textSize="22sp"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="475dp" />
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:background="@color/md_theme_primaryFixed_mediumContrast"
+        android:padding="10dp"
+        android:text="Create Account"
+        android:textColor="@color/md_theme_surfaceVariant_mediumContrast"
+        android:visibility="visible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imgMain" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

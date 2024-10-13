@@ -6,10 +6,16 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class YogaDatabaseHelper extends SQLiteOpenHelper {
+
+    FirebaseDatabase firebaseDatabase;
+    DatabaseReference usersReference;
 
     // Database Information
     private static final String DATABASE_NAME = "YogaApp.db";
@@ -46,6 +52,9 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
 
     public YogaDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+
+        firebaseDatabase = FirebaseDatabase.getInstance();
+        usersReference = firebaseDatabase.getReference("users");
     }
 
     @Override
@@ -94,6 +103,27 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    public void dropAllTables() {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Query to get all table names
+        Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                String tableName = cursor.getString(0);
+
+                // Skip the metadata tables (e.g., android_metadata, sqlite_sequence)
+                if (!tableName.equals("android_metadata") && !tableName.equals("sqlite_sequence")) {
+                    db.execSQL("DROP TABLE IF EXISTS " + tableName);
+                }
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+    }
+
+
     // Method to add new Yoga Class
     public void addYogaClass(String dayOfWeek, String time, int capacity, int duration, double price, String type, String description) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -124,6 +154,50 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
 
         db.insert(TABLE_USER, null, values);
         db.close();
+
+        // After inserting into SQLite, save all users to Firebase
+        saveAllUsersToFirebase();
+    }
+
+    public void saveAllUsersToFirebase() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String selectQuery = "SELECT * FROM " + TABLE_USER;
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                User user = new User();
+                user.setId(cursor.getInt(0));
+                user.setUsername(cursor.getString(1));
+                user.setEmail(cursor.getString(2));
+                user.setPassword(cursor.getString(3));
+                user.setRole(cursor.getString(4));
+                user.setPhone(cursor.getString(5));
+
+                // Save user to Firebase
+                saveUserToFirebase(user);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+    }
+
+    private void saveUserToFirebase(User user) {
+        // Get a unique ID for the user
+        String userId = usersReference.push().getKey();
+
+        // Save user data to Firebase
+        usersReference.child(userId).setValue(user)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        // Handle success
+                        System.out.println("User saved to Firebase successfully!");
+                    } else {
+                        // Handle failure
+                        System.out.println("Failed to save user to Firebase.");
+                    }
+                });
     }
 
     // Method to check user login
@@ -163,6 +237,69 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         db.close();
     }
+
+    public String getUsernameByEmail(String email) {
+        if (email == null || email.isEmpty()) {
+
+        }else{
+            SQLiteDatabase db = this.getReadableDatabase();
+            String selectQuery = "SELECT " + COLUMN_USERNAME + " FROM " + TABLE_USER + " WHERE " + COLUMN_EMAIL + " = ?";
+            Cursor cursor = db.rawQuery(selectQuery, new String[]{email});
+
+            if (cursor.moveToFirst()) {
+                String username = cursor.getString(0);  // Get the username
+                cursor.close();
+                return username;
+            }
+
+            cursor.close();
+            return null;
+        }
+        return null;
+    }
+
+    public String getUserRoleByEmail(String email) {
+        if (email == null || email.isEmpty()) {
+
+        }else {
+            SQLiteDatabase db = this.getReadableDatabase();
+            String selectQuery = "SELECT " + COLUMN_ROLE + " FROM " + TABLE_USER + " WHERE " + COLUMN_EMAIL + " = ?";
+            Cursor cursor = db.rawQuery(selectQuery, new String[]{email});
+
+            if (cursor.moveToFirst()) {
+                String role = cursor.getString(0);  // Lấy vai trò
+                cursor.close();
+                return role;
+            }
+
+            cursor.close();
+            return null;  // Trả về null nếu không tìm thấy người dùng
+        }
+        return null;
+    }
+
+
+    public void deleteUserByEmail(String email) {
+        if (email == null || email.isEmpty()) {
+
+        }else {
+            SQLiteDatabase db = this.getWritableDatabase();
+
+            // Use an SQL delete statement to remove the user
+            int rowsAffected = db.delete(TABLE_USER, COLUMN_EMAIL + " = ?", new String[]{email});
+
+            if (rowsAffected > 0) {
+                System.out.println("User deleted successfully.");
+            } else {
+                System.out.println("No user found with the given email.");
+            }
+
+            db.close();
+        }
+
+    }
+
+
 
     // Method to get all users
     public List<User> getAllUsers() {
