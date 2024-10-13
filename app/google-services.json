@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "153148474018",
+    "firebase_url": "https://universalyoga-ea62a-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "universalyoga-ea62a",
+    "storage_bucket": "universalyoga-ea62a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153148474018:android:62fdb592e97761340e0dfb",
+        "android_client_info": {
+          "package_name": "com.example.universalyoga"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1_IvPMBgXMFVCKHPXwnORh_2ghwLgR78"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
