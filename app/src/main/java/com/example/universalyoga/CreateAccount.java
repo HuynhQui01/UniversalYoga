@@ -42,9 +42,12 @@ public class CreateAccount extends AppCompatActivity {
             public void onClick(View view) {
                 String email = edtEmail.getText().toString();
                 String password = edtPass.getText().toString();
+                String phone = edtPhone.getText().toString();
+                String userName = edtUserName.getText().toString();
+                String role = spRole.getSelectedItem().toString();
 
                 if (validateForm(email, password)) {
-                    registerUser(email, password);
+                    registerUser(userName, email, password, role, phone);
                 }
             }
         });
@@ -57,46 +60,29 @@ public class CreateAccount extends AppCompatActivity {
 
     }
 
-    // Thay vì dùng Firebase Authentication, sử dụng SQLite
-    private void registerUser(String email, String password) {
-        // Kiểm tra xem email đã tồn tại trong SQLite chưa
+
+    private void registerUser(String name, String email, String password, String role, String phone) {
+
         if (dbHelper.getUsernameByEmail(email) != null) {
-            Toast.makeText(CreateAccount.this, "Email đã tồn tại!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(CreateAccount.this, "Email exists!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Lưu người dùng mới vào SQLite
-        dbHelper.addUser("user", email, password, "customer", null);
-
-        // Sau khi lưu vào SQLite, đẩy lên Firebase Realtime Database
-        saveUserToFirebase(email, password);
+        dbHelper.addUser(name, email, password, role, phone);
+        finish();
     }
 
-    // Hàm lưu người dùng lên Firebase Realtime Database
-    private void saveUserToFirebase(String email, String password) {
-        User newUser = new User("user", email, password, "customer", null);
 
-        FirebaseDatabase.getInstance().getReference("users")
-                .push()
-                .setValue(newUser)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Toast.makeText(CreateAccount.this, "Tạo tài khoản thành công!", Toast.LENGTH_SHORT).show();
-                        finish();
-                    } else {
-                        Toast.makeText(CreateAccount.this, "Tạo tài khoản thất bại: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
-    }
+
 
     private boolean validateForm(String email, String password) {
         if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            edtEmail.setError("Vui lòng nhập email hợp lệ");
+            edtEmail.setError("Invalid email!");
             return false;
         }
 
         if (password.isEmpty() || password.length() < 6) {
-            edtPass.setError("Mật khẩu phải có ít nhất 6 ký tự");
+            edtPass.setError("Password must be more than 6");
             return false;
         }
 

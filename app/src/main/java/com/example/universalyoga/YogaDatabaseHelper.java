@@ -267,13 +267,13 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
             Cursor cursor = db.rawQuery(selectQuery, new String[]{email});
 
             if (cursor.moveToFirst()) {
-                String role = cursor.getString(0);  // Lấy vai trò
+                String role = cursor.getString(0);
                 cursor.close();
                 return role;
             }
 
             cursor.close();
-            return null;  // Trả về null nếu không tìm thấy người dùng
+            return null;
         }
         return null;
     }
@@ -298,6 +298,26 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         }
 
     }
+
+    public String getPhoneByEmail(String email) {
+        if (email == null || email.isEmpty()) {
+            return null;
+        } else {
+            SQLiteDatabase db = this.getReadableDatabase();
+            String selectQuery = "SELECT " + COLUMN_PHONE + " FROM " + TABLE_USER + " WHERE " + COLUMN_EMAIL + " = ?";
+            Cursor cursor = db.rawQuery(selectQuery, new String[]{email});
+
+            if (cursor.moveToFirst()) {
+                String phone = cursor.getString(0);
+                cursor.close();
+                return phone;
+            }
+
+            cursor.close();
+            return null;
+        }
+    }
+
 
 
 
