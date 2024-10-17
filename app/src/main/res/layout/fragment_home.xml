@@ -19,4 +19,18 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/yoga1" />
 
+    <TextView
+        android:id="@+id/textView11"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="32dp"
+        android:text="Current Classes"
+        android:textSize="30sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imgMain" />
+
+
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -80,10 +80,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-//        btnCreateAcc.setOnClickListener(view -> {
-//            Intent createAcc = new Intent(MainActivity.this, CreateAccount.class);
-//            startActivity(createAcc);
-//        });
+
 
 
         dbHelper = new YogaDatabaseHelper(this);

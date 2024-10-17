@@ -10,7 +10,7 @@ public class User {
 
     // Constructors
     public User() {
-        // Default constructor required for Firebase
+
     }
 
     public User(String username, String email, String password, String role, String phone) {

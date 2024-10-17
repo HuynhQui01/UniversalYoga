@@ -48,6 +48,8 @@ public class CreateAccount extends AppCompatActivity {
 
                 if (validateForm(email, password)) {
                     registerUser(userName, email, password, role, phone);
+
+                    finish();
                 }
             }
         });
@@ -69,6 +71,7 @@ public class CreateAccount extends AppCompatActivity {
         }
 
         dbHelper.addUser(name, email, password, role, phone);
+        Toast.makeText(CreateAccount.this, "Create account successfully!", Toast.LENGTH_SHORT).show();
         finish();
     }
 

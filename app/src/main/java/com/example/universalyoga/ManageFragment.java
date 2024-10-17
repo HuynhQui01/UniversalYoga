@@ -77,6 +77,15 @@ public class ManageFragment extends Fragment {
                 Intent createAcc = new Intent(context, CreateAccount.class);
                 startActivity(createAcc);
             });
+        btnCreateClass.setOnClickListener(v -> {
+            Intent createClass = new Intent(context, CreateClassActivity.class);
+            startActivity(createClass);
+        });
+
+        btnCreateSession.setOnClickListener(v ->{
+            Intent createSession = new Intent(context, CreateSessionActivity.class);
+            startActivity(createSession);
+        });
 
 
 

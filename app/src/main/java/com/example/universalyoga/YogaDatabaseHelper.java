@@ -6,8 +6,13 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import androidx.annotation.NonNull;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -137,9 +142,104 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_TYPE, type);
         values.put(COLUMN_DESCRIPTION, description);
 
-        db.insert(TABLE_YOGA_CLASS, null, values);
+        long classId = db.insert(TABLE_YOGA_CLASS, null, values);
+        db.close();
+
+
+        saveClassToFirebase(classId);
+    }
+
+    private void saveClassToFirebase(long classId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String selectQuery = "SELECT * FROM " + TABLE_YOGA_CLASS + " WHERE " + COLUMN_ID + " = ?";
+        Cursor cursor = db.rawQuery(selectQuery, new String[]{String.valueOf(classId)});
+
+        if (cursor.moveToFirst()) {
+            Yoga yogaClass = new Yoga();
+            yogaClass.setId(cursor.getInt(0));
+            yogaClass.setDayOfWeek(cursor.getString(1));
+            yogaClass.setTime(cursor.getString(2));
+            yogaClass.setCapacity(cursor.getInt(3));
+            yogaClass.setDuration(cursor.getInt(4));
+            yogaClass.setPrice(cursor.getDouble(5));
+            yogaClass.setType(cursor.getString(6));
+            yogaClass.setDescription(cursor.getString(7));
+
+            checkClassInFirebase(yogaClass);
+        }
+
+        cursor.close();
         db.close();
     }
+
+
+
+    private void checkClassInFirebase(Yoga yogaClass) {
+        DatabaseReference classesReference = firebaseDatabase.getReference("yogaClasses");
+        classesReference.orderByChild("id").equalTo(yogaClass.getId())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        // Nếu lớp học không tồn tại, lưu lên Firebase
+                        if (!dataSnapshot.exists()) {
+                            saveClassToFirebase(yogaClass);
+                        } else {
+                            System.out.println("Class already exists in Firebase: ID = " + yogaClass.getId());
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        System.out.println("Error checking class in Firebase: " + databaseError.getMessage());
+                    }
+                });
+    }
+
+    private void saveClassToFirebase(Yoga yogaClass) {
+        // Get a unique ID for the class (if needed)
+        DatabaseReference classesReference = firebaseDatabase.getReference("yogaClasses");
+        String classId = classesReference.push().getKey();
+
+        classesReference.child(classId).setValue(yogaClass)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        System.out.println("Yoga class saved to Firebase successfully!");
+                    } else {
+                        System.out.println("Failed to save yoga class to Firebase.");
+                    }
+                });
+    }
+
+    public List<Yoga> getAllYogaClasses() {
+        List<Yoga> yogaClassList = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String selectQuery = "SELECT * FROM " + TABLE_YOGA_CLASS;
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                Yoga yogaClass = new Yoga();
+                yogaClass.setId(cursor.getInt(0));
+                yogaClass.setDayOfWeek(cursor.getString(1));
+                yogaClass.setTime(cursor.getString(2));
+                yogaClass.setCapacity(cursor.getInt(3));
+                yogaClass.setDuration(cursor.getInt(4));
+                yogaClass.setPrice(cursor.getDouble(5));
+                yogaClass.setType(cursor.getString(6));
+                yogaClass.setDescription(cursor.getString(7));
+
+                yogaClassList.add(yogaClass);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        return yogaClassList;
+    }
+
+
+
+
 
     // Method to add new User
     public void addUser(String username, String email, String password, String role, String phone) {
@@ -174,13 +274,35 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
                 user.setRole(cursor.getString(4));
                 user.setPhone(cursor.getString(5));
 
-                // Save user to Firebase
-                saveUserToFirebase(user);
+                // Check if the user already exists on Firebase
+                checkUserInFirebase(user);
             } while (cursor.moveToNext());
         }
 
         cursor.close();
         db.close();
+    }
+
+    private void checkUserInFirebase(User user) {
+        // Query Firebase to check if a user with this email already exists
+        usersReference.orderByChild("email").equalTo(user.getEmail())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        // If user doesn't exist, add to Firebase
+                        if (dataSnapshot.exists()) {
+                            System.out.println("User already exists in Firebase: " + user.getEmail());
+                        } else {
+                            // User not found, save to Firebase
+                            saveUserToFirebase(user);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        System.out.println("Error checking user in Firebase: " + databaseError.getMessage());
+                    }
+                });
     }
 
     private void saveUserToFirebase(User user) {
@@ -208,35 +330,141 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
 
         if (cursor.moveToFirst()) {
             cursor.close();
-            return true; // User found
+            return true;
         }
 
         cursor.close();
-        return false; // User not found
+        return false;
     }
+
+
 
     public void addClassInstance(String date, int teacherId, String comments, int classId) {
         SQLiteDatabase db = this.getWritableDatabase();
 
-        String selectQuery = "SELECT " + COLUMN_ROLE + " FROM " + TABLE_USER + " WHERE " + COLUMN_USER_ID + " = ? AND " + COLUMN_ROLE + " = ?";
-        Cursor cursor = db.rawQuery(selectQuery, new String[]{String.valueOf(teacherId), "teacher"});
+        // Check if the teacherId is valid and if they are actually a teacher
+        String selectTeacherQuery = "SELECT " + COLUMN_ROLE + " FROM " + TABLE_USER + " WHERE " + COLUMN_USER_ID + " = ?";
+        Cursor teacherCursor = db.rawQuery(selectTeacherQuery, new String[]{String.valueOf(teacherId)});
+
+        if (teacherCursor.moveToFirst()) {
+            String role = teacherCursor.getString(0);
+            if (!"instructor".equals(role)) {
+                throw new IllegalArgumentException("Invalid teacher ID or the user is not a teacher.");
+            }
+        } else {
+            throw new IllegalArgumentException("Invalid teacher ID.");
+        }
+
+        // Check if the class instance already exists with the same date and teacherId
+        String checkInstanceQuery = "SELECT * FROM " + TABLE_CLASS_INSTANCE + " WHERE " + COLUMN_DATE + " = ? AND " + COLUMN_TEACHER + " = ?";
+        Cursor instanceCursor = db.rawQuery(checkInstanceQuery, new String[]{date, String.valueOf(teacherId)});
+
+        if (instanceCursor.moveToFirst()) {
+            instanceCursor.close();
+            teacherCursor.close();
+            throw new IllegalArgumentException("Class instance already exists for this teacher on the given date.");
+        }
+        instanceCursor.close();
+
+        // Proceed to insert the new class instance into SQLite
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_DATE, date);
+        values.put(COLUMN_TEACHER, teacherId);
+        values.put(COLUMN_COMMENTS, comments);
+        values.put(COLUMN_CLASS_ID, classId);
+
+        long instanceId = db.insert(TABLE_CLASS_INSTANCE, null, values);
+
+        // Close the database after insertion
+        db.close();
+
+        // Now save this instance to Firebase if it is not already there
+        saveClassInstanceToFirebase(instanceId, date, teacherId, comments, classId);
+    }
+
+    private void saveClassInstanceToFirebase(long instanceId, String date, int teacherId, String comments, int classId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String selectQuery = "SELECT * FROM " + TABLE_CLASS_INSTANCE + " WHERE " + COLUMN_ID + " = ?";
+        Cursor cursor = db.rawQuery(selectQuery, new String[]{String.valueOf(instanceId)});
 
         if (cursor.moveToFirst()) {
-            ContentValues values = new ContentValues();
-            values.put(COLUMN_DATE, date);
-            values.put(COLUMN_TEACHER, teacherId);
-            values.put(COLUMN_COMMENTS, comments);
-            values.put(COLUMN_CLASS_ID, classId);
+            // Create a new ClassInstance object (assuming you have a ClassInstance class)
+            Session classInstance = new Session();
+            classInstance.setId(cursor.getInt(0)); // Assuming the first column is the ID
+            classInstance.setDate(cursor.getString(1));
+            classInstance.setInstructorId(cursor.getInt(2)); // Assuming teacher is an int ID
+            classInstance.setComment(cursor.getString(3));
+            classInstance.setClassId(cursor.getInt(4));
 
-            db.insert(TABLE_CLASS_INSTANCE, null, values);
-        } else {
-            // Handle case where teacherId is not a valid teacher
-            throw new IllegalArgumentException("Invalid teacher ID or the user is not a teacher.");
+            // Check if the class instance already exists in Firebase
+            checkClassInstanceInFirebase(classInstance);
         }
 
         cursor.close();
         db.close();
     }
+
+    private void checkClassInstanceInFirebase(Session classInstance) {
+        DatabaseReference classInstancesReference = firebaseDatabase.getReference("classInstances");
+        classInstancesReference.orderByChild("id").equalTo(classInstance.getId())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        // If the class instance does not exist, save it to Firebase
+                        if (!dataSnapshot.exists()) {
+                            saveClassInstanceToFirebase(classInstance);
+                        } else {
+                            System.out.println("Class instance already exists in Firebase: ID = " + classInstance.getId());
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        System.out.println("Error checking class instance in Firebase: " + databaseError.getMessage());
+                    }
+                });
+    }
+
+    private void saveClassInstanceToFirebase(Session classInstance) {
+        DatabaseReference classInstancesReference = firebaseDatabase.getReference("classInstances");
+        String instanceId = classInstancesReference.push().getKey(); // Generate a unique ID for Firebase
+
+        classInstancesReference.child(instanceId).setValue(classInstance)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        System.out.println("Class instance saved to Firebase successfully!");
+                    } else {
+                        System.out.println("Failed to save class instance to Firebase.");
+                    }
+                });
+    }
+
+
+    public List<User> getInstructors() {
+        List<User> instructorList = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+
+        String selectQuery = "SELECT * FROM " + TABLE_USER + " WHERE " + COLUMN_ROLE + " = ?";
+        Cursor cursor = db.rawQuery(selectQuery, new String[]{"instructor"});
+
+        if (cursor.moveToFirst()) {
+            do {
+                User user = new User();
+                user.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_USER_ID)));
+                user.setUsername(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_USERNAME)));
+                user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_EMAIL)));
+                user.setPassword(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PASSWORD)));
+                user.setRole(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ROLE))) ;
+                user.setPhone(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PHONE)));
+                instructorList.add(user);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        return instructorList;
+    }
+
 
     public String getUsernameByEmail(String email) {
         if (email == null || email.isEmpty()) {
