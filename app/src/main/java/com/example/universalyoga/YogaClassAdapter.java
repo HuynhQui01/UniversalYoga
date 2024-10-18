@@ -23,17 +23,17 @@ public class YogaClassAdapter extends RecyclerView.Adapter<YogaClassAdapter.View
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_yoga_class, parent, false); // Create a new layout for individual class item
+                .inflate(R.layout.item_yoga_class, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Yoga yogaClass = yogaClassList.get(position);
-        holder.textViewClassName.setText(yogaClass.getType()); // Assuming type is the name
+        holder.textViewClassName.setText(yogaClass.getType());
         holder.textViewClassTime.setText( "Time :" + yogaClass.getTime());
         holder.txtViewCapacity.setText("Capacity: " + yogaClass.getCapacity());
-        holder.txtDayOfWeek.setText(yogaClass.getDayOfWeek());// Assuming time is a field in Yoga
+        holder.txtDayOfWeek.setText(yogaClass.getDayOfWeek());
         // Set other fields as needed
     }
 

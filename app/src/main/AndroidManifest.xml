@@ -15,6 +15,12 @@
         android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
         tools:targetApi="31">
         <activity
+            android:name=".EditProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ManageAccountActivity"
+            android:exported="false" />
+        <activity
             android:name=".CreateSessionActivity"
             android:exported="false" />
         <activity

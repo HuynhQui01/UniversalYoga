@@ -2,6 +2,7 @@ package com.example.universalyoga;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -18,14 +19,17 @@ import android.widget.Button;
  */
 public class ManageFragment extends Fragment {
 
-    Button btnCreatAcc;
+    Button btnManageAccount;
     Button btnCreateClass;
     Button btnCreateSession;
+    Button btnDelAcc;
+    Button btnDelClass;
+    Button btnDelSession;
 
     SessionManger sessionManger;
     Context context;
     YogaDatabaseHelper dbHelper;
-    // TODO: Rename parameter arguments, choose names that match
+
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
@@ -73,9 +77,9 @@ public class ManageFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_manage, container, false);
         Mapping(view);
 
-            btnCreatAcc.setOnClickListener(v -> {
-                Intent createAcc = new Intent(context, CreateAccount.class);
-                startActivity(createAcc);
+            btnManageAccount.setOnClickListener(v -> {
+                Intent manageAccount = new Intent(context, ManageAccountActivity.class);
+                startActivity(manageAccount);
             });
         btnCreateClass.setOnClickListener(v -> {
             Intent createClass = new Intent(context, CreateClassActivity.class);
@@ -94,11 +98,16 @@ public class ManageFragment extends Fragment {
     }
 
     void Mapping(View view){
+
         context = getContext();
         sessionManger = new SessionManger();
-        btnCreatAcc = view.findViewById(R.id.btnCreateAcc);
+        btnManageAccount = view.findViewById(R.id.btnManageAccount);
         btnCreateClass = view.findViewById(R.id.btnCreateClass);
         btnCreateSession = view.findViewById(R.id.btnCreateSession);
+        btnDelAcc = view.findViewById(R.id.btnDelUser);
+        btnDelClass = view.findViewById(R.id.btnDelClass);
+        btnDelSession = view.findViewById(R.id.btnDelSession);
         dbHelper = new YogaDatabaseHelper(context);
+
     }
 }

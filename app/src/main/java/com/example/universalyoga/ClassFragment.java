@@ -85,7 +85,7 @@ public class ClassFragment extends Fragment {
     }
 
     void Mapping(View rootView){
-        recyclerView = rootView.findViewById(R.id.recyclerView);
+        recyclerView = rootView.findViewById(R.id.rcvClass);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         databaseHelper = new YogaDatabaseHelper(getContext());
     }

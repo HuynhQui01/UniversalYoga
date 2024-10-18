@@ -5,9 +5,12 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -15,7 +18,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class YogaDatabaseHelper extends SQLiteOpenHelper {
 
@@ -238,11 +243,9 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-
-
-
     // Method to add new User
     public void addUser(String username, String email, String password, String role, String phone) {
+        // 1. Lưu user vào SQLite trước
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -255,8 +258,9 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_USER, null, values);
         db.close();
 
-        // After inserting into SQLite, save all users to Firebase
-        saveAllUsersToFirebase();
+        // 2. Lưu user mới vào Firebase
+        User newUser = new User(username, email, password, role, phone);
+        saveUserToFirebase(newUser);
     }
 
     public void saveAllUsersToFirebase() {
@@ -274,8 +278,9 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
                 user.setRole(cursor.getString(4));
                 user.setPhone(cursor.getString(5));
 
-                // Check if the user already exists on Firebase
-                checkUserInFirebase(user);
+                // Cập nhật user lên Firebase, sử dụng email làm khóa
+                saveUserToFirebase(user);
+
             } while (cursor.moveToNext());
         }
 
@@ -283,40 +288,27 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    private void checkUserInFirebase(User user) {
-        // Query Firebase to check if a user with this email already exists
-        usersReference.orderByChild("email").equalTo(user.getEmail())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        // If user doesn't exist, add to Firebase
-                        if (dataSnapshot.exists()) {
-                            System.out.println("User already exists in Firebase: " + user.getEmail());
-                        } else {
-                            // User not found, save to Firebase
-                            saveUserToFirebase(user);
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        System.out.println("Error checking user in Firebase: " + databaseError.getMessage());
-                    }
-                });
-    }
-
     private void saveUserToFirebase(User user) {
-        // Get a unique ID for the user
-        String userId = usersReference.push().getKey();
+        // Chuẩn hóa email để làm khóa (thay dấu chấm bằng dấu phẩy)
+        String sanitizedEmail = user.getEmail().replace(".", ",");
 
-        // Save user data to Firebase
-        usersReference.child(userId).setValue(user)
+        // Tạo một bản đồ chứa các giá trị của user
+        Map<String, Object> userValues = new HashMap<>();
+        userValues.put("id", user.getId());
+        userValues.put("username", user.getUsername());
+        userValues.put("email", user.getEmail());
+        userValues.put("password", user.getPassword());
+        userValues.put("role", user.getRole());
+        userValues.put("phone", user.getPhone());
+
+        // Lưu user vào Firebase dưới khóa là email đã chuẩn hóa
+        usersReference.child(sanitizedEmail).updateChildren(userValues)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        // Handle success
+                        // Xử lý khi lưu thành công
                         System.out.println("User saved to Firebase successfully!");
                     } else {
-                        // Handle failure
+                        // Xử lý khi thất bại
                         System.out.println("Failed to save user to Firebase.");
                     }
                 });
@@ -465,6 +457,55 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         return instructorList;
     }
 
+    public void UpdateUser(User user, String newPhone, String newName) {
+
+        // 1. Cập nhật dữ liệu trong SQLite
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        // Thêm các giá trị mới cho cột trong SQLite
+        values.put(COLUMN_PHONE, newPhone);
+        values.put(COLUMN_USERNAME, newName);
+
+        // Cập nhật dữ liệu trong SQLite, tìm bằng email của người dùng
+        int result = db.update(TABLE_USER, values, COLUMN_EMAIL + " = ?", new String[]{user.getEmail()});
+        if (result == -1) {
+            Log.e("SQLiteUpdate", "Failed to update user in SQLite.");
+            return;
+        }
+
+        // 2. Sau khi cập nhật thành công trong SQLite, lấy dữ liệu mới nhất từ SQLite
+        User updatedUser = getUserByEmail(user.getEmail());
+        if (updatedUser == null) {
+            Log.e("SQLiteFetch", "Failed to fetch updated user from SQLite.");
+            return;
+        }
+
+        // 3. Cập nhật dữ liệu từ SQLite lên Firebase
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference usersRef = database.getReference("users");
+
+        // Chuẩn hóa email để tránh dấu chấm trong Firebase keys
+        String sanitizedEmail = updatedUser.getEmail().replace(".", ",");
+
+        // Tạo HashMap để chứa các giá trị cần cập nhật trong Firebase
+        Map<String, Object> updatedValues = new HashMap<>();
+        updatedValues.put("username", updatedUser.getUsername());
+        updatedValues.put("phone", updatedUser.getPhone());
+
+        // Cập nhật dữ liệu trong Firebase
+        usersRef.child(sanitizedEmail).updateChildren(updatedValues).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Log.d("FirebaseUpdate", "User updated successfully in Firebase.");
+            } else {
+                Log.e("FirebaseUpdate", "Failed to update user in Firebase: " + task.getException());
+            }
+        });
+    }
+
+
+
+
 
     public String getUsernameByEmail(String email) {
         if (email == null || email.isEmpty()) {
@@ -475,7 +516,7 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
             Cursor cursor = db.rawQuery(selectQuery, new String[]{email});
 
             if (cursor.moveToFirst()) {
-                String username = cursor.getString(0);  // Get the username
+                String username = cursor.getString(0);
                 cursor.close();
                 return username;
             }
@@ -485,6 +526,32 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         }
         return null;
     }
+
+    public User getUserByEmail(String email) {
+        if (email == null || email.isEmpty()) {
+            return null;
+        } else {
+            SQLiteDatabase db = this.getReadableDatabase();
+            String selectQuery = "SELECT * FROM " + TABLE_USER + " WHERE " + COLUMN_EMAIL + " = ?";
+            Cursor cursor = db.rawQuery(selectQuery, new String[]{email});
+
+            User user = null;
+
+            if (cursor.moveToFirst()) {
+                user = new User();
+                user.setId(cursor.getInt(0));
+                user.setUsername(cursor.getString(1));
+                user.setEmail(cursor.getString(2));
+                user.setPassword(cursor.getString(3));
+                user.setRole(cursor.getString(4));
+                user.setPhone(cursor.getString(5));
+            }
+
+            cursor.close();
+            return user;
+        }
+    }
+
 
     public String getUserRoleByEmail(String email) {
         if (email == null || email.isEmpty()) {

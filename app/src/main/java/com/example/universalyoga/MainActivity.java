@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SessionManger sessionManger;
     private ImageButton btnLogin;
-    private Button btnCreateAcc;
+
     private YogaDatabaseHelper dbHelper;
 
     @Override
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
     private void Mapping() {
 
         sessionManger = new SessionManger();
-        btnCreateAcc = findViewById(R.id.btnCreateAcc);
+
         dbHelper = new YogaDatabaseHelper(this);
     }
 }

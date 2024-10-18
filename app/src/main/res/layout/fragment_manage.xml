@@ -6,49 +6,102 @@
     android:layout_height="match_parent"
     tools:context=".ManageFragment">
 
-    <Button
-        android:id="@+id/btnCreateAcc"
-        android:layout_width="300dp"
-        android:layout_height="60dp"
-        android:layout_marginTop="32dp"
-        android:background="@color/md_theme_tertiaryFixed"
-        android:text="Create Account"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/btnCreateClass"
-        android:layout_width="300dp"
-        android:layout_height="60dp"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView"
+        android:layout_width="332dp"
+        android:layout_height="250dp"
         android:layout_marginTop="32dp"
-        android:background="@color/md_theme_secondaryContainer"
-        android:text="Create Class"
+        android:padding="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="10dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnCreateAcc" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <Button
-        android:id="@+id/btnCreateSession"
-        android:layout_width="300dp"
-        android:layout_height="60dp"
-        android:layout_marginTop="32dp"
-        android:background="@color/md_theme_errorContainer"
-        android:text="Create Session"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnCreateClass" />
 
-    <TextView
-        android:id="@+id/textView3"
-        android:layout_width="339dp"
-        android:layout_height="132dp"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btnManageAccount"
+                android:layout_width="300dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="16dp"
+                android:background="@color/md_theme_tertiaryFixed"
+                android:text="Manage Account" />
+
+            <Button
+                android:id="@+id/btnCreateClass"
+                android:layout_width="300dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="16dp"
+                android:background="@color/md_theme_secondaryContainer"
+                android:text="Create Class" />
+
+            <Button
+                android:id="@+id/btnCreateSession"
+                android:layout_width="300dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="16dp"
+                android:background="@color/md_theme_errorContainer"
+                android:text="Create Session" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="332dp"
+        android:layout_height="250dp"
         android:layout_marginTop="32dp"
+        android:padding="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/cardView">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btnDelUser"
+                android:layout_width="300dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="16dp"
+                android:background="#bc0055"
+                android:textColor="#FFF"
+                android:text="Delete user" />
+
+            <Button
+                android:id="@+id/btnDelClass"
+                android:layout_width="300dp"
+                android:layout_height="60dp"
+                android:background="#009195"
+                android:textColor="#FFF"
+                android:layout_marginTop="16dp"
+                android:text="Delete class" />
+
+            <Button
+                android:id="@+id/btnDelSession"
+                android:layout_width="300dp"
+                android:layout_height="60dp"
+                android:background="#ca9f00"
+                android:textColor="#FFF"
+                android:layout_marginTop="16dp"
+                android:text="Delete session" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
