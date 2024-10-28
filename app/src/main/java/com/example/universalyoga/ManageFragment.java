@@ -82,13 +82,13 @@ public class ManageFragment extends Fragment {
                 startActivity(manageAccount);
             });
         btnCreateClass.setOnClickListener(v -> {
-            Intent createClass = new Intent(context, CreateClassActivity.class);
-            startActivity(createClass);
+            Intent manageClass = new Intent(context, ManageClassActivity.class);
+            startActivity(manageClass);
         });
 
         btnCreateSession.setOnClickListener(v ->{
-            Intent createSession = new Intent(context, CreateSessionActivity.class);
-            startActivity(createSession);
+            Intent manageSession = new Intent(context, ManageSessionActivity.class);
+            startActivity(manageSession);
         });
 
 
@@ -102,7 +102,7 @@ public class ManageFragment extends Fragment {
         context = getContext();
         sessionManger = new SessionManger();
         btnManageAccount = view.findViewById(R.id.btnManageAccount);
-        btnCreateClass = view.findViewById(R.id.btnCreateClass);
+        btnCreateClass = view.findViewById(R.id.btnManageClass);
         btnCreateSession = view.findViewById(R.id.btnCreateSession);
         btnDelAcc = view.findViewById(R.id.btnDelUser);
         btnDelClass = view.findViewById(R.id.btnDelClass);

@@ -1,5 +1,6 @@
 package com.example.universalyoga;
 
+import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -32,6 +33,9 @@ public class CreateClassActivity extends AppCompatActivity {
         setContentView(R.layout.activity_create_class);
 
         Mapping();
+
+        edtTime.setOnClickListener(v -> showTimePickerDialog());
+
         btnCreate.setOnClickListener(v -> {
             String dayOfWeek = spDayOfWeek.getSelectedItem().toString();
             String time = edtTime.getText().toString();
@@ -46,11 +50,18 @@ public class CreateClassActivity extends AppCompatActivity {
             finish();
         });
 
-        btnCancel.setOnClickListener(v -> {
-            finish();
+        btnCancel.setOnClickListener(v -> finish());
+    }
 
-        });
+    private void showTimePickerDialog() {
+        int hour = 12;
+        int minute = 0;
 
+        TimePickerDialog timePickerDialog = new TimePickerDialog(this, (view, selectedHour, selectedMinute) -> {
+
+            edtTime.setText(String.format("%02d:%02d", selectedHour, selectedMinute));
+        }, hour, minute, true);
+        timePickerDialog.show();
     }
 
     void Mapping(){

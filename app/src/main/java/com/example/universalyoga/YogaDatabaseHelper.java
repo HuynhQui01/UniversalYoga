@@ -181,15 +181,16 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
 
     private void checkClassInFirebase(Yoga yogaClass) {
         DatabaseReference classesReference = firebaseDatabase.getReference("yogaClasses");
+
         classesReference.orderByChild("id").equalTo(yogaClass.getId())
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        // Nếu lớp học không tồn tại, lưu lên Firebase
+
                         if (!dataSnapshot.exists()) {
                             saveClassToFirebase(yogaClass);
                         } else {
-                            System.out.println("Class already exists in Firebase: ID = " + yogaClass.getId());
+                            updateYogaClassToFireBase(yogaClass);
                         }
                     }
 
@@ -201,9 +202,9 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void saveClassToFirebase(Yoga yogaClass) {
-        // Get a unique ID for the class (if needed)
         DatabaseReference classesReference = firebaseDatabase.getReference("yogaClasses");
-        String classId = classesReference.push().getKey();
+
+        String classId = String.valueOf(yogaClass.getId());
 
         classesReference.child(classId).setValue(yogaClass)
                 .addOnCompleteListener(task -> {
@@ -214,6 +215,7 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
                     }
                 });
     }
+
 
     public List<Yoga> getAllYogaClasses() {
         List<Yoga> yogaClassList = new ArrayList<>();
@@ -242,91 +244,359 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         return yogaClassList;
     }
 
-
-    // Method to add new User
-    public void addUser(String username, String email, String password, String role, String phone) {
-        // 1. Lưu user vào SQLite trước
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_USERNAME, username);
-        values.put(COLUMN_EMAIL, email);
-        values.put(COLUMN_PASSWORD, password);
-        values.put(COLUMN_ROLE, role);
-        values.put(COLUMN_PHONE, phone);
-
-        db.insert(TABLE_USER, null, values);
-        db.close();
-
-        // 2. Lưu user mới vào Firebase
-        User newUser = new User(username, email, password, role, phone);
-        saveUserToFirebase(newUser);
-    }
-
-    public void saveAllUsersToFirebase() {
+    public Yoga getYogaClassById(long Id){
+        Yoga yogaClass = new Yoga();
         SQLiteDatabase db = this.getReadableDatabase();
-        String selectQuery = "SELECT * FROM " + TABLE_USER;
-        Cursor cursor = db.rawQuery(selectQuery, null);
+        String selectQuery = "SELECT * FROM " + TABLE_YOGA_CLASS + " WHERE " + COLUMN_ID + " = ?";
+        Cursor cursor = db.rawQuery(selectQuery, new String[]{String.valueOf(Id)});
 
         if (cursor.moveToFirst()) {
-            do {
-                User user = new User();
-                user.setId(cursor.getInt(0));
-                user.setUsername(cursor.getString(1));
-                user.setEmail(cursor.getString(2));
-                user.setPassword(cursor.getString(3));
-                user.setRole(cursor.getString(4));
-                user.setPhone(cursor.getString(5));
 
-                // Cập nhật user lên Firebase, sử dụng email làm khóa
-                saveUserToFirebase(user);
+            yogaClass.setId(cursor.getInt(0));
+            yogaClass.setDayOfWeek(cursor.getString(1));
+            yogaClass.setTime(cursor.getString(2));
+            yogaClass.setCapacity(cursor.getInt(3));
+            yogaClass.setDuration(cursor.getInt(4));
+            yogaClass.setPrice(cursor.getDouble(5));
+            yogaClass.setType(cursor.getString(6));
+            yogaClass.setDescription(cursor.getString(7));
 
-            } while (cursor.moveToNext());
         }
 
         cursor.close();
         db.close();
+        return yogaClass;
     }
 
-    private void saveUserToFirebase(User user) {
-        // Chuẩn hóa email để làm khóa (thay dấu chấm bằng dấu phẩy)
-        String sanitizedEmail = user.getEmail().replace(".", ",");
+    public void updateClassByIdWithIncludingSession(int id, String time, int duration, String description){
+        Yoga yoga = getYogaClassById(id);
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
 
-        // Tạo một bản đồ chứa các giá trị của user
+
+        values.put("dayOfWeek", yoga.getDayOfWeek());
+        values.put("time", time);
+        values.put("capacity", yoga.getCapacity());
+        values.put("duration", duration);
+        values.put("price", yoga.getPrice());
+        values.put("type", yoga.getType());
+        values.put("description", description);
+
+
+        int rowsAffected = db.update(TABLE_YOGA_CLASS, values, COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
+
+        yoga.setTime(time);
+        yoga.setDuration(duration);
+        yoga.setDescription(description);
+
+        checkClassInFirebase(yoga);
+
+
+//        db.close();
+    }
+
+    public void updateClassByIdWithNoSession(int id, String time, int duration, double price,String type, String dayOfWeek, String description, int capacity){
+        Yoga yoga = getYogaClassById(id);
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+
+        values.put("dayOfWeek", dayOfWeek);
+        values.put("time", time);
+        values.put("capacity", capacity);
+        values.put("duration", duration);
+        values.put("price", price);
+        values.put("type", type);
+        values.put("description", description);
+
+
+        int rowsAffected = db.update(TABLE_YOGA_CLASS, values, COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
+
+        yoga.setTime(time);
+        yoga.setDuration(duration);
+        yoga.setDescription(description);
+        yoga.setDayOfWeek(dayOfWeek);
+        yoga.setPrice(price);
+        yoga.setType(type);
+        yoga.setCapacity(capacity);
+
+        checkClassInFirebase(yoga);
+
+
+        db.close();
+    }
+
+    public boolean hasClassInstanceForYogaClass(int yogaClassId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        boolean hasInstance = false;
+
+        String query = "SELECT 1 FROM " + TABLE_CLASS_INSTANCE + " WHERE " + COLUMN_CLASS_ID + " = ?";
+        try (Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(yogaClassId)})) {
+            if (cursor != null && cursor.moveToFirst()) {
+                hasInstance = true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.close();
+        }
+
+        return hasInstance;
+    }
+
+    private void updateYogaClassToFireBase(Yoga yoga){
+        DatabaseReference yogaClassesReference = firebaseDatabase.getReference("yogaClasses");
+
+        yogaClassesReference.child(String.valueOf(yoga.getId()))
+                .setValue(yoga)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        System.out.println("Yoga class updated in Firebase successfully!");
+                    } else {
+                        System.out.println("Failed to update yoga class in Firebase.");
+                    }
+                });
+    }
+
+    public void deleteYogaClassById(int classId) {
+
+        if (hasClassInstanceForYogaClass(classId)) {
+
+            deleteSessionsForClass(classId);
+        }
+
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rowsDeleted = db.delete(TABLE_YOGA_CLASS, COLUMN_ID + " = ?", new String[]{String.valueOf(classId)});
+
+        if (rowsDeleted > 0) {
+            System.out.println("Yoga class deleted from SQLite successfully!");
+            deleteClassFromFirebase(classId);
+        } else {
+            System.out.println("Failed to delete yoga class from SQLite.");
+        }
+
+        db.close();
+    }
+
+    private void deleteSessionsForClass(int classId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        db.delete(TABLE_CLASS_INSTANCE, COLUMN_CLASS_ID + " = ?", new String[]{String.valueOf(classId)});
+        System.out.println("Sessions deleted from SQLite successfully for class ID: " + classId);
+
+
+        deleteSessionsFromFirebase(classId);
+    }
+
+    private void deleteSessionsFromFirebase(int classId) {
+        DatabaseReference sessionsReference = firebaseDatabase.getReference("classInstances");
+
+        sessionsReference.orderByChild("classId").equalTo(classId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    snapshot.getRef().removeValue();
+                }
+                System.out.println("Sessions deleted from Firebase successfully for class ID: " + classId);
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("Failed to delete sessions from Firebase: " + databaseError.getMessage());
+            }
+        });
+    }
+
+    private void deleteClassFromFirebase(int classId) {
+        DatabaseReference classesReference = firebaseDatabase.getReference("yogaClasses");
+        String classKey = String.valueOf(classId);
+
+        classesReference.child(classKey).removeValue()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        System.out.println("Yoga class deleted from Firebase successfully!");
+                    } else {
+                        System.out.println("Failed to delete yoga class from Firebase.");
+                    }
+                });
+    }
+
+
+
+    public Session GetSessionById(long id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        Session session = null;
+        String selectQuery = "SELECT * FROM " + TABLE_CLASS_INSTANCE + " WHERE " + COLUMN_ID + " = ?";
+        Cursor sessionCursor = db.rawQuery(selectQuery, new String[]{String.valueOf(id)});
+
+
+        if (sessionCursor.moveToFirst()) {
+            session = new Session();
+            session.setId(sessionCursor.getInt(sessionCursor.getColumnIndexOrThrow(COLUMN_ID)));
+            session.setClassId(sessionCursor.getInt(sessionCursor.getColumnIndexOrThrow(COLUMN_CLASS_ID)));
+            session.setComment(sessionCursor.getString(sessionCursor.getColumnIndexOrThrow(COLUMN_COMMENTS)));
+            session.setInstructorId(sessionCursor.getInt(sessionCursor.getColumnIndexOrThrow(COLUMN_TEACHER)));
+            session.setDate(sessionCursor.getString(sessionCursor.getColumnIndexOrThrow(COLUMN_DATE)));
+        }
+
+        sessionCursor.close();
+        return session;
+    }
+
+    public List<Session> GetSessionByClassId(long id){
+        SQLiteDatabase db = this.getWritableDatabase();
+        List<Session> lstSession = new ArrayList<>();
+        String selectQuery = "SELECT * FROM " + TABLE_CLASS_INSTANCE + " WHERE " + COLUMN_CLASS_ID + " = ?";
+        Cursor sessionCursor = db.rawQuery(selectQuery, new String[]{String.valueOf(id)} );
+
+        if (sessionCursor.moveToFirst()) {
+            do {
+                Session session = new Session();
+                session.setId(sessionCursor.getInt(sessionCursor.getColumnIndexOrThrow(COLUMN_ID)));
+                session.setClassId(sessionCursor.getInt(sessionCursor.getColumnIndexOrThrow(COLUMN_CLASS_ID)));
+                session.setComment(sessionCursor.getString(sessionCursor.getColumnIndexOrThrow(COLUMN_COMMENTS)));
+                session.setInstructorId(sessionCursor.getInt(sessionCursor.getColumnIndexOrThrow(COLUMN_TEACHER)));
+                session.setDate(sessionCursor.getString(sessionCursor.getColumnIndexOrThrow(COLUMN_DATE)));
+                lstSession.add(session);
+            } while (sessionCursor.moveToNext());
+        }
+
+        sessionCursor.close();
+        return lstSession;
+    }
+
+    public boolean updateSession(Session session, int instructorid, String date, String comment) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        Log.e("check session id", String.valueOf(session.getId()));
+
+        values.put(COLUMN_DATE, date);
+        values.put(COLUMN_TEACHER, instructorid);
+        values.put(COLUMN_COMMENTS, comment);
+        values.put(COLUMN_CLASS_ID, session.getClassId());
+
+        int result = db.update(TABLE_CLASS_INSTANCE, values, COLUMN_ID + " = ?", new String[]{String.valueOf(session.getId())});
+
+        db.close();
+        checkClassInstanceInFirebase(session.getId(), date, instructorid, comment, session.getClassId());
+        return result > 0;
+    }
+
+    public List<Session> getAllSession(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        List<Session> lstSession = new ArrayList<>();
+        String selectQuery = "SELECT * FROM " + TABLE_CLASS_INSTANCE;
+        Cursor sessionCursor = db.rawQuery(selectQuery,null );
+
+        if (sessionCursor.moveToFirst()) {
+            do {
+                Session session = new Session();
+                session.setId(sessionCursor.getInt(sessionCursor.getColumnIndexOrThrow(COLUMN_ID)));
+                session.setClassId(sessionCursor.getInt(sessionCursor.getColumnIndexOrThrow(COLUMN_CLASS_ID)));
+                session.setComment(sessionCursor.getString(sessionCursor.getColumnIndexOrThrow(COLUMN_COMMENTS)));
+                session.setInstructorId(sessionCursor.getInt(sessionCursor.getColumnIndexOrThrow(COLUMN_TEACHER)));
+                session.setDate(sessionCursor.getString(sessionCursor.getColumnIndexOrThrow(COLUMN_DATE)));
+
+                lstSession.add(session);
+            } while (sessionCursor.moveToNext());
+        }
+
+        sessionCursor.close();
+        db.close();
+        return lstSession;
+    }
+
+    public boolean deleteSessionById(long id){
+        DatabaseReference classInstanceRef = firebaseDatabase.getReference("classInstances");
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rowsDeleted = db.delete("ClassInstance", "id = ?", new String[]{String.valueOf(id)});
+
+        classInstanceRef.child(String.valueOf(id)).removeValue()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        System.out.println("Session deleted successfully from Firebase.");
+                    } else {
+                        System.out.println("Failed to delete session from Firebase.");
+                    }
+                });
+        return rowsDeleted > 0;
+    }
+
+
+    // Method to add new User
+    public void addUser(String username, String email, String password, String role, String phone) {
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        HashPass hash = new HashPass();
+        String hashedpass = hash.hashPassword(password);
+
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_USERNAME, username);
+        values.put(COLUMN_EMAIL, email);
+        values.put(COLUMN_PASSWORD, hashedpass);
+        values.put(COLUMN_ROLE, role);
+        values.put(COLUMN_PHONE, phone);
+
+        long id = db.insert(TABLE_USER, null, values);
+        db.close();
+
+        User newUser = new User(username, email, hashedpass, role, phone);
+        saveUserToFirebase(newUser, id);
+    }
+
+    public String getUserNameById(long id){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String selectQuery = "SELECT " + COLUMN_USERNAME + " FROM " + TABLE_USER + " WHERE " + COLUMN_USER_ID + " = ? ";
+        Cursor cursor = db.rawQuery(selectQuery, new String[]{String.valueOf(id)});
+        String userName = null;
+        if(cursor.moveToFirst()){
+            userName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_USERNAME));
+        }
+        cursor.close();
+        db.close();
+
+        return userName;
+    }
+
+
+    private void saveUserToFirebase(User user, long id) {
+
+        String userId = String.valueOf(id);
+
+
         Map<String, Object> userValues = new HashMap<>();
-        userValues.put("id", user.getId());
+        userValues.put("id", userId);
         userValues.put("username", user.getUsername());
         userValues.put("email", user.getEmail());
         userValues.put("password", user.getPassword());
         userValues.put("role", user.getRole());
         userValues.put("phone", user.getPhone());
 
-        // Lưu user vào Firebase dưới khóa là email đã chuẩn hóa
-        usersReference.child(sanitizedEmail).updateChildren(userValues)
+
+        usersReference.child(userId).updateChildren(userValues)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        // Xử lý khi lưu thành công
                         System.out.println("User saved to Firebase successfully!");
                     } else {
-                        // Xử lý khi thất bại
                         System.out.println("Failed to save user to Firebase.");
                     }
                 });
     }
 
-    // Method to check user login
+
     public boolean checkUser(String email, String password) {
+        HashPass hashPass = new HashPass();
+        String hashedPassword = hashPass.hashPassword(password);
+
         SQLiteDatabase db = this.getReadableDatabase();
         String selectQuery = "SELECT * FROM " + TABLE_USER + " WHERE " + COLUMN_EMAIL + " = ? AND " + COLUMN_PASSWORD + " = ?";
-        Cursor cursor = db.rawQuery(selectQuery, new String[]{email, password});
+        Cursor cursor = db.rawQuery(selectQuery, new String[]{email, hashedPassword});
 
-        if (cursor.moveToFirst()) {
-            cursor.close();
-            return true;
-        }
-
+        boolean userExists = cursor.moveToFirst();
         cursor.close();
-        return false;
+        return userExists;
     }
 
 
@@ -334,7 +604,6 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
     public void addClassInstance(String date, int teacherId, String comments, int classId) {
         SQLiteDatabase db = this.getWritableDatabase();
 
-        // Check if the teacherId is valid and if they are actually a teacher
         String selectTeacherQuery = "SELECT " + COLUMN_ROLE + " FROM " + TABLE_USER + " WHERE " + COLUMN_USER_ID + " = ?";
         Cursor teacherCursor = db.rawQuery(selectTeacherQuery, new String[]{String.valueOf(teacherId)});
 
@@ -347,7 +616,6 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
             throw new IllegalArgumentException("Invalid teacher ID.");
         }
 
-        // Check if the class instance already exists with the same date and teacherId
         String checkInstanceQuery = "SELECT * FROM " + TABLE_CLASS_INSTANCE + " WHERE " + COLUMN_DATE + " = ? AND " + COLUMN_TEACHER + " = ?";
         Cursor instanceCursor = db.rawQuery(checkInstanceQuery, new String[]{date, String.valueOf(teacherId)});
 
@@ -358,7 +626,7 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         }
         instanceCursor.close();
 
-        // Proceed to insert the new class instance into SQLite
+
         ContentValues values = new ContentValues();
         values.put(COLUMN_DATE, date);
         values.put(COLUMN_TEACHER, teacherId);
@@ -367,46 +635,33 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
 
         long instanceId = db.insert(TABLE_CLASS_INSTANCE, null, values);
 
-        // Close the database after insertion
         db.close();
 
-        // Now save this instance to Firebase if it is not already there
-        saveClassInstanceToFirebase(instanceId, date, teacherId, comments, classId);
+
+        checkClassInstanceInFirebase(instanceId, date, teacherId, comments, classId);
     }
 
-    private void saveClassInstanceToFirebase(long instanceId, String date, int teacherId, String comments, int classId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        String selectQuery = "SELECT * FROM " + TABLE_CLASS_INSTANCE + " WHERE " + COLUMN_ID + " = ?";
-        Cursor cursor = db.rawQuery(selectQuery, new String[]{String.valueOf(instanceId)});
+    private void checkClassInstanceInFirebase(long instanceId, String date, int teacherId, String comments, int classId) {
 
-        if (cursor.moveToFirst()) {
-            // Create a new ClassInstance object (assuming you have a ClassInstance class)
-            Session classInstance = new Session();
-            classInstance.setId(cursor.getInt(0)); // Assuming the first column is the ID
-            classInstance.setDate(cursor.getString(1));
-            classInstance.setInstructorId(cursor.getInt(2)); // Assuming teacher is an int ID
-            classInstance.setComment(cursor.getString(3));
-            classInstance.setClassId(cursor.getInt(4));
+        Session classInstance = new Session();
+        classInstance.setId((int) instanceId);
+        classInstance.setDate(date);
+        classInstance.setInstructorId(teacherId);
+        classInstance.setComment(comments);
+        classInstance.setClassId(classId);
 
-            // Check if the class instance already exists in Firebase
-            checkClassInstanceInFirebase(classInstance);
-        }
-
-        cursor.close();
-        db.close();
-    }
-
-    private void checkClassInstanceInFirebase(Session classInstance) {
         DatabaseReference classInstancesReference = firebaseDatabase.getReference("classInstances");
-        classInstancesReference.orderByChild("id").equalTo(classInstance.getId())
+
+
+        classInstancesReference.child(String.valueOf(classInstance.getId()))
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        // If the class instance does not exist, save it to Firebase
+
                         if (!dataSnapshot.exists()) {
                             saveClassInstanceToFirebase(classInstance);
                         } else {
-                            System.out.println("Class instance already exists in Firebase: ID = " + classInstance.getId());
+                            updateClassInstanceInFirebase(classInstance);
                         }
                     }
 
@@ -415,13 +670,15 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
                         System.out.println("Error checking class instance in Firebase: " + databaseError.getMessage());
                     }
                 });
+
     }
+
 
     private void saveClassInstanceToFirebase(Session classInstance) {
         DatabaseReference classInstancesReference = firebaseDatabase.getReference("classInstances");
-        String instanceId = classInstancesReference.push().getKey(); // Generate a unique ID for Firebase
 
-        classInstancesReference.child(instanceId).setValue(classInstance)
+        classInstancesReference.child(String.valueOf(classInstance.getId()))
+                .setValue(classInstance)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         System.out.println("Class instance saved to Firebase successfully!");
@@ -430,6 +687,21 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
                     }
                 });
     }
+
+    private void updateClassInstanceInFirebase(Session classInstance) {
+        DatabaseReference classInstancesReference = firebaseDatabase.getReference("classInstances");
+
+        classInstancesReference.child(String.valueOf(classInstance.getId()))
+                .setValue(classInstance) // Phương thức này sẽ tự động cập nhật nếu node đã tồn tại
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        System.out.println("Class instance updated in Firebase successfully!");
+                    } else {
+                        System.out.println("Failed to update class instance in Firebase.");
+                    }
+                });
+    }
+
 
 
     public List<User> getInstructors() {
@@ -459,41 +731,41 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
 
     public void UpdateUser(User user, String newPhone, String newName) {
 
-        // 1. Cập nhật dữ liệu trong SQLite
+
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
-        // Thêm các giá trị mới cho cột trong SQLite
+
         values.put(COLUMN_PHONE, newPhone);
         values.put(COLUMN_USERNAME, newName);
 
-        // Cập nhật dữ liệu trong SQLite, tìm bằng email của người dùng
+
         int result = db.update(TABLE_USER, values, COLUMN_EMAIL + " = ?", new String[]{user.getEmail()});
         if (result == -1) {
             Log.e("SQLiteUpdate", "Failed to update user in SQLite.");
             return;
         }
 
-        // 2. Sau khi cập nhật thành công trong SQLite, lấy dữ liệu mới nhất từ SQLite
+
         User updatedUser = getUserByEmail(user.getEmail());
         if (updatedUser == null) {
             Log.e("SQLiteFetch", "Failed to fetch updated user from SQLite.");
             return;
         }
 
-        // 3. Cập nhật dữ liệu từ SQLite lên Firebase
+
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference usersRef = database.getReference("users");
 
-        // Chuẩn hóa email để tránh dấu chấm trong Firebase keys
+
         String sanitizedEmail = updatedUser.getEmail().replace(".", ",");
 
-        // Tạo HashMap để chứa các giá trị cần cập nhật trong Firebase
+
         Map<String, Object> updatedValues = new HashMap<>();
         updatedValues.put("username", updatedUser.getUsername());
         updatedValues.put("phone", updatedUser.getPhone());
 
-        // Cập nhật dữ liệu trong Firebase
+
         usersRef.child(sanitizedEmail).updateChildren(updatedValues).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 Log.d("FirebaseUpdate", "User updated successfully in Firebase.");
@@ -502,8 +774,6 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
             }
         });
     }
-
-
 
 
 
@@ -580,18 +850,44 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         }else {
             SQLiteDatabase db = this.getWritableDatabase();
 
-            // Use an SQL delete statement to remove the user
+            String selectQuery = "SELECT " + COLUMN_USER_ID + " FROM " + TABLE_USER + " WHERE " + COLUMN_EMAIL + " = ?";
+            Cursor cursor = db.rawQuery(selectQuery, new String[]{email});
+
+            long id = -1;
+
+            if (cursor.moveToFirst()) {
+                id = cursor.getInt(0);
+                cursor.close();
+            }
+
             int rowsAffected = db.delete(TABLE_USER, COLUMN_EMAIL + " = ?", new String[]{email});
 
             if (rowsAffected > 0) {
-                System.out.println("User deleted successfully.");
+                System.out.println("User deleted successfully from SQLite.");
+
+                deleteUserFromFirebase(id);
             } else {
-                System.out.println("No user found with the given email.");
+                System.out.println("No user found with the given email in SQLite.");
             }
 
             db.close();
         }
 
+    }
+
+    private void deleteUserFromFirebase(long userId) {
+
+        String userIdString = String.valueOf(userId);
+
+
+        usersReference.child(userIdString).removeValue()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        System.out.println("User deleted successfully from Firebase.");
+                    } else {
+                        System.out.println("Failed to delete user from Firebase.");
+                    }
+                });
     }
 
     public String getPhoneByEmail(String email) {
@@ -612,8 +908,6 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
             return null;
         }
     }
-
-
 
 
     // Method to get all users

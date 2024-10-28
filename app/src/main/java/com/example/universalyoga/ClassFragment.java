@@ -20,7 +20,7 @@ import java.util.List;
 public class ClassFragment extends Fragment {
 
     private RecyclerView recyclerView;
-    private YogaClassAdapter yogaClassAdapter;
+    private YogaClassWIthSessionAdapter yogaClassWIthSessionAdapter;
 
     private YogaDatabaseHelper databaseHelper;
     // TODO: Rename parameter arguments, choose names that match
@@ -67,8 +67,8 @@ public class ClassFragment extends Fragment {
     public void onStart() {
         super.onStart();
         List<Yoga> yogaClassList = databaseHelper.getAllYogaClasses();
-        yogaClassAdapter = new YogaClassAdapter(yogaClassList);
-        recyclerView.setAdapter(yogaClassAdapter);
+        yogaClassWIthSessionAdapter = new YogaClassWIthSessionAdapter(yogaClassList);
+        recyclerView.setAdapter(yogaClassWIthSessionAdapter);
     }
 
     @Override
@@ -78,8 +78,8 @@ public class ClassFragment extends Fragment {
         Mapping(rootView);
 
         List<Yoga> yogaClassList = databaseHelper.getAllYogaClasses();
-        yogaClassAdapter = new YogaClassAdapter(yogaClassList);
-        recyclerView.setAdapter(yogaClassAdapter);
+        yogaClassWIthSessionAdapter = new YogaClassWIthSessionAdapter(yogaClassList);
+        recyclerView.setAdapter(yogaClassWIthSessionAdapter);
 
         return rootView;
     }

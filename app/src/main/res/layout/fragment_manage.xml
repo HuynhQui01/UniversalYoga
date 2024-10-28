@@ -35,12 +35,12 @@
                 android:text="Manage Account" />
 
             <Button
-                android:id="@+id/btnCreateClass"
+                android:id="@+id/btnManageClass"
                 android:layout_width="300dp"
                 android:layout_height="60dp"
                 android:layout_marginTop="16dp"
                 android:background="@color/md_theme_secondaryContainer"
-                android:text="Create Class" />
+                android:text="Manage Class" />
 
             <Button
                 android:id="@+id/btnCreateSession"
@@ -48,7 +48,7 @@
                 android:layout_height="60dp"
                 android:layout_marginTop="16dp"
                 android:background="@color/md_theme_errorContainer"
-                android:text="Create Session" />
+                android:text="Manage Session" />
 
         </LinearLayout>
 
