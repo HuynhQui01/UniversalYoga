@@ -48,7 +48,6 @@ public class YogaClassWIthSessionAdapter extends RecyclerView.Adapter<YogaClassW
 
         sessionAdapter = new SessionAdapter(lstSession);
         holder.rcvSession.setAdapter(sessionAdapter);
-        holder.rcvSession.setVisibility(View.INVISIBLE);
     }
 
     @Override
