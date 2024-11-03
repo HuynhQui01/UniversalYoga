@@ -32,8 +32,8 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
         // Get the session at the current position
         Session session = lstSession.get(position);
 
-        holder.txtDate.setText(session.getDate());
-        holder.txtComment.setText(session.getComment());
+        holder.txtDate.setText("Date start: " + session.getDate());
+        holder.txtComment.setText("Comment: "+session.getComment());
         holder.txtInstructor.setText(dbHelper.getUserNameById(session.getInstructorId()));
 
 
@@ -48,14 +48,12 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView txtDate;
         TextView txtComment;
-        TextView txtSlot;
         TextView txtInstructor;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             txtDate = itemView.findViewById(R.id.txtSessionDate);
             txtComment = itemView.findViewById(R.id.txtSessionComment);
-            txtSlot = itemView.findViewById(R.id.txtSessionSlot);
             txtInstructor = itemView.findViewById(R.id.txtSessionInstructorName);
         }
     }

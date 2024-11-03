@@ -1058,5 +1058,30 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_USER, null, values);
     }
 
+    public List<Session> getSessionByInstructorId(int id){
+        if(id != 0){
+            SQLiteDatabase db = this.getWritableDatabase();
+            String query = "SELECT * FROM " + TABLE_CLASS_INSTANCE + " WHERE " + COLUMN_TEACHER + " = ?";
+            Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(id)});
+            List<Session> sessionList = new ArrayList<>();
+            if (cursor.moveToFirst()) {
+                do {
+                    Session session = new Session();
+                    session.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                    session.setDate(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DATE)));
+                    session.setInstructorId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TEACHER)));
+                    session.setClassId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CLASS_ID)));
+                    session.setComment(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_COMMENTS)));
+                    sessionList.add(session);
+                } while (cursor.moveToNext());
+            }
+
+            db.close();
+            return sessionList;
+        }
+        return null;
+
+    }
+
 
 }

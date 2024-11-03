@@ -8,6 +8,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -15,12 +19,16 @@ import androidx.fragment.app.Fragment;
  * create an instance of this fragment.
  */
 public class HomeFragment extends Fragment {
-
+    private RecyclerView rcvClass;
     private ImageView imageView;
     private Handler handler;
     private Runnable runnable;
     private int[] imageArray = {R.drawable.yoga1, R.drawable.yoga2, R.drawable.yoga3};
     private int currentIndex = 0;
+    SessionAdapter sessionAdapter;
+
+    YogaDatabaseHelper dbHelper;
+    SessionManger sessionManger;
 
     // TODO: Rename parameter arguments, choose names that match
     private static final String ARG_PARAM1 = "param1";
@@ -55,9 +63,18 @@ public class HomeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_home, container, false);
+        dbHelper = new YogaDatabaseHelper(rootView.getContext());
+        sessionManger = new SessionManger();
 
-        // Initialize views
         imageView = rootView.findViewById(R.id.imgMain);
+        rcvClass = rootView.findViewById(R.id.rcvHomeClass);
+        rcvClass.setLayoutManager(new LinearLayoutManager(rootView.getContext()));
+        if(sessionManger.isUserLoggedIn(rootView.getContext())){
+            User user = dbHelper.getUserByEmail(sessionManger.getUserEmail(rootView.getContext()));
+            List<Session> sessionList = dbHelper.getSessionByInstructorId(user.getId());
+            sessionAdapter = new SessionAdapter(sessionList);
+            rcvClass.setAdapter(sessionAdapter);
+        }
 
         // Start image slideshow
         handler = new Handler();

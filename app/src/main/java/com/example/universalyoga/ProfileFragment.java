@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
@@ -31,6 +32,7 @@ public class ProfileFragment extends Fragment {
     TextView txtRole;
     TextView txtEmail;
     YogaDatabaseHelper dbHelper;
+    CardView cardView;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -109,6 +111,7 @@ public class ProfileFragment extends Fragment {
             txtName.setVisibility(View.INVISIBLE);
             txtPhone.setVisibility(View.INVISIBLE);
             btnLogin.setVisibility(View.VISIBLE);
+            cardView.setVisibility(View.INVISIBLE);
             txtName.setText("");
             txtPhone.setText("");
             btnLogin.setOnClickListener(v ->{
@@ -121,7 +124,7 @@ public class ProfileFragment extends Fragment {
             btnLogout.setVisibility(View.VISIBLE);
             txtName.setVisibility(View.VISIBLE);
             txtPhone.setVisibility(View.VISIBLE);
-
+            cardView.setVisibility(View.VISIBLE);
             btnLogout.setOnClickListener(v -> showLogoutConfirmationDialog());
             User user = dbHelper.getUserByEmail(sessionManger.getUserEmail(context));
 
@@ -143,5 +146,6 @@ public class ProfileFragment extends Fragment {
         txtRole = view.findViewById(R.id.txtProfileRole);
         txtEmail = view.findViewById(R.id.txtProfileEmail);
         dbHelper = new YogaDatabaseHelper(context);
+        cardView = view.findViewById(R.id.cardViewProfile);
     }
 }

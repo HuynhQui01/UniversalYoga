@@ -21,18 +21,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/txtMSessionSlot"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
-        android:textStyle="bold"
-        android:textSize="18dp"
-        android:textColor="#000"
-        android:text="TextView"
-        app:layout_constraintStart_toEndOf="@+id/txtMSession"
-        app:layout_constraintTop_toTopOf="parent" />
+
 
     <TextView
         android:id="@+id/txtMSessionInstructor"
@@ -51,14 +40,14 @@
         android:id="@+id/txtMSessionDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
-        android:textStyle="bold"
-        android:textSize="18dp"
-        android:textColor="#000"
+        android:layout_marginStart="28dp"
+        android:layout_marginTop="16dp"
         android:text="TextView"
+        android:textColor="#000"
+        android:textSize="18dp"
+        android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/txtMSessionInstructor"
-        app:layout_constraintTop_toBottomOf="@+id/txtMSessionSlot" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/txtMSessionComent"

@@ -44,7 +44,6 @@ public class ManageSessionAdapter extends RecyclerView.Adapter<ManageSessionAdap
         holder.txtSessionDate.setText(session.getDate());
         holder.txtInstructorName.setText("Instructor: " + session.getInstructorId());
         holder.txtComment.setText("Comments: " + session.getComment());
-        holder.txtSessionSlot.setText("Slot: ");
         holder.txtSession.setText(dbHelper.getYogaClassById(session.getClassId()).getType());
 
         holder.btnEdit.setOnClickListener(v -> {
@@ -97,7 +96,6 @@ public class ManageSessionAdapter extends RecyclerView.Adapter<ManageSessionAdap
         TextView txtInstructorName;
         TextView txtComment;
         TextView txtSession;
-        TextView txtSessionSlot;
 
         ImageButton btnEdit;
         ImageButton btnDel;
@@ -108,7 +106,6 @@ public class ManageSessionAdapter extends RecyclerView.Adapter<ManageSessionAdap
             txtSessionDate = itemView.findViewById(R.id.txtMSessionDate);
             txtComment = itemView.findViewById(R.id.txtMSessionComent);
             txtInstructorName = itemView.findViewById(R.id.txtMSessionInstructor);
-            txtSessionSlot = itemView.findViewById(R.id.txtMSessionSlot);
             btnEdit = itemView.findViewById(R.id.btnMSessionEdit);
             btnDel = itemView.findViewById(R.id.btnMSessionDel);
         }
