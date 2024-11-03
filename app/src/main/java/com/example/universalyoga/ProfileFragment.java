@@ -13,6 +13,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.Locale;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link ProfileFragment#newInstance} factory method to
@@ -26,7 +28,8 @@ public class ProfileFragment extends Fragment {
     Context context;
     TextView txtName;
     TextView txtPhone;
-    Fragment homeFragment = new HomeFragment();
+    TextView txtRole;
+    TextView txtEmail;
     YogaDatabaseHelper dbHelper;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -120,9 +123,12 @@ public class ProfileFragment extends Fragment {
             txtPhone.setVisibility(View.VISIBLE);
 
             btnLogout.setOnClickListener(v -> showLogoutConfirmationDialog());
+            User user = dbHelper.getUserByEmail(sessionManger.getUserEmail(context));
 
-            txtName.setText(dbHelper.getUsernameByEmail(sessionManger.getUserEmail(context)));
-            txtPhone.setText(dbHelper.getPhoneByEmail(sessionManger.getUserEmail(context)));
+            txtName.setText("User name: " + user.getUsername());
+            txtPhone.setText("Phone: "+user.getPhone());
+            txtEmail.setText("Email: "+user.getEmail());
+            txtRole.setText("Role: "+user.getRole().toUpperCase(Locale.ROOT));
 
         }
     }
@@ -134,6 +140,8 @@ public class ProfileFragment extends Fragment {
         btnLogin = view.findViewById(R.id.btnLogin);
         txtName = view.findViewById(R.id.txtProfileName);
         txtPhone = view.findViewById(R.id.txtPhone);
+        txtRole = view.findViewById(R.id.txtProfileRole);
+        txtEmail = view.findViewById(R.id.txtProfileEmail);
         dbHelper = new YogaDatabaseHelper(context);
     }
 }

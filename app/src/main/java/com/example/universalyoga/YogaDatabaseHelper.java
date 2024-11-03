@@ -26,6 +26,8 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
 
     FirebaseDatabase firebaseDatabase;
     DatabaseReference usersReference;
+    DatabaseReference classesReference;
+    DatabaseReference sessionsReference;
 
     // Database Information
     private static final String DATABASE_NAME = "YogaApp.db";
@@ -60,11 +62,15 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_ROLE = "role"; // "admin" or "customer"
     private static final String COLUMN_PHONE = "phone";
 
+
+
     public YogaDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
 
-        firebaseDatabase = FirebaseDatabase.getInstance();
+        firebaseDatabase = FirebaseDatabase.getInstance("https://universal-yoga-df14b-default-rtdb.asia-southeast1.firebasedatabase.app/");
         usersReference = firebaseDatabase.getReference("users");
+        classesReference = firebaseDatabase.getReference("yogaClasses");
+        sessionsReference = firebaseDatabase.getReference("classInstances");
     }
 
     @Override
@@ -103,6 +109,7 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
                 + "FOREIGN KEY(" + COLUMN_CLASS_ID + ") REFERENCES " + TABLE_YOGA_CLASS + "(" + COLUMN_ID + ")"
                 + ")";
         db.execSQL(CREATE_CLASS_INSTANCE_TABLE);
+
     }
 
     @Override
@@ -176,6 +183,7 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         db.close();
     }
+
 
 
 
@@ -523,26 +531,22 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         return rowsDeleted > 0;
     }
 
-
     // Method to add new User
     public void addUser(String username, String email, String password, String role, String phone) {
 
         SQLiteDatabase db = this.getWritableDatabase();
 
-        HashPass hash = new HashPass();
-        String hashedpass = hash.hashPassword(password);
-
         ContentValues values = new ContentValues();
         values.put(COLUMN_USERNAME, username);
         values.put(COLUMN_EMAIL, email);
-        values.put(COLUMN_PASSWORD, hashedpass);
+        values.put(COLUMN_PASSWORD, password);
         values.put(COLUMN_ROLE, role);
         values.put(COLUMN_PHONE, phone);
 
         long id = db.insert(TABLE_USER, null, values);
         db.close();
 
-        User newUser = new User(username, email, hashedpass, role, phone);
+        User newUser = new User(username, email, password, role, phone);
         saveUserToFirebase(newUser, id);
     }
 
@@ -559,6 +563,8 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
 
         return userName;
     }
+
+
 
 
     private void saveUserToFirebase(User user, long id) {
@@ -890,25 +896,6 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
                 });
     }
 
-    public String getPhoneByEmail(String email) {
-        if (email == null || email.isEmpty()) {
-            return null;
-        } else {
-            SQLiteDatabase db = this.getReadableDatabase();
-            String selectQuery = "SELECT " + COLUMN_PHONE + " FROM " + TABLE_USER + " WHERE " + COLUMN_EMAIL + " = ?";
-            Cursor cursor = db.rawQuery(selectQuery, new String[]{email});
-
-            if (cursor.moveToFirst()) {
-                String phone = cursor.getString(0);
-                cursor.close();
-                return phone;
-            }
-
-            cursor.close();
-            return null;
-        }
-    }
-
 
     // Method to get all users
     public List<User> getAllUsers() {
@@ -935,4 +922,141 @@ public class YogaDatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return userList;
     }
+
+    public void syncAllDataToFirebase() {
+        syncUsersToFirebase();
+        syncClassesToFirebase();
+        syncClassInstancesToFirebase();
+    }
+
+    public void syncUsersToFirebase() {
+        Log.e("syncUsersToFirebase", "in");
+        List<User> users = getAllUsers();
+        DatabaseReference usersReference = firebaseDatabase.getReference("users");
+
+        for (User user : users) {
+            usersReference.child(String.valueOf(user.getId())).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (!dataSnapshot.exists()) {
+                        usersReference.child(String.valueOf(user.getId())).setValue(user)
+                                .addOnCompleteListener(task -> {
+
+                                    if (task.isSuccessful()) {
+                                        System.out.println("User " + user.getUsername() + " synced to Firebase successfully.");
+                                        Log.e("saveToFirebase",user.toString());
+                                    } else {
+                                        System.out.println("Failed to sync user " + user.getUsername() + " to Firebase.");
+                                    }
+                                });
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    System.out.println("Error syncing user " + user.getUsername() + ": " + databaseError.getMessage());
+                }
+            });
+        }
+    }
+
+    private void syncClassesToFirebase() {
+        List<Yoga> classes = getAllYogaClasses();
+
+        for (Yoga yogaClass : classes) {
+            classesReference.child(String.valueOf(yogaClass.getId())).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (!dataSnapshot.exists()) {
+                        classesReference.child(String.valueOf(yogaClass.getId())).setValue(yogaClass)
+                                .addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        System.out.println("Class " + yogaClass.getType() + " synced to Firebase successfully.");
+                                    } else {
+                                        System.out.println("Failed to sync class " + yogaClass.getType() + " to Firebase.");
+                                    }
+                                });
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    System.out.println("Error syncing class " + yogaClass.getType() + ": " + databaseError.getMessage());
+                }
+            });
+        }
+    }
+
+    private void syncClassInstancesToFirebase() {
+        List<Session> classInstances = getAllSession();
+        DatabaseReference classInstancesReference = firebaseDatabase.getReference("classInstances");
+
+        for (Session classInstance : classInstances) {
+            classInstancesReference.child(String.valueOf(classInstance.getId())).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (!dataSnapshot.exists()) {
+                        classInstancesReference.child(String.valueOf(classInstance.getId())).setValue(classInstance)
+                                .addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        System.out.println("Class instance " + classInstance.getId() + " synced to Firebase successfully.");
+                                    } else {
+                                        System.out.println("Failed to sync class instance " + classInstance.getId() + " to Firebase.");
+                                    }
+                                });
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    System.out.println("Error syncing class instance " + classInstance.getId() + ": " + databaseError.getMessage());
+                }
+            });
+        }
+    }
+
+    public void syncAllDataFromFirebaseToSQLite() {
+        syncUsersFromFirebase();
+    }
+
+    private void syncUsersFromFirebase() {
+        usersReference.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DataSnapshot dataSnapshot = task.getResult();
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    User user = snapshot.getValue(User.class);
+                    if (user != null && !isUserInSQLite(user.getId()) && user.getId() != 0) {
+                        saveUserToSQLite(user);
+                    }
+                }
+                System.out.println("All users synced from Firebase to SQLite.");
+            } else {
+                System.out.println("Failed to sync users: " + task.getException().getMessage());
+            }
+        });
+    }
+
+    private boolean isUserInSQLite(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT * FROM " + TABLE_USER + " WHERE " + COLUMN_USER_ID + " = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(userId)});
+        boolean exists = cursor.moveToFirst();
+        cursor.close();
+        return exists;
+    }
+
+    private void saveUserToSQLite(User user) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_USER_ID, user.getId());
+        values.put(COLUMN_USERNAME, user.getUsername());
+        values.put(COLUMN_EMAIL, user.getEmail());
+        values.put(COLUMN_PASSWORD, user.getPassword());
+        values.put(COLUMN_ROLE, user.getRole());
+        values.put(COLUMN_PHONE, user.getPhone());
+
+        db.insert(TABLE_USER, null, values);
+    }
+
+
 }

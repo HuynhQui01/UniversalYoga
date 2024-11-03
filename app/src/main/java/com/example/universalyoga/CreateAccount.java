@@ -69,8 +69,9 @@ public class CreateAccount extends AppCompatActivity {
             Toast.makeText(CreateAccount.this, "Email exists!", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        dbHelper.addUser(name, email, password, role, phone);
+        HashPass hash = new HashPass();
+        String hashedpass = hash.hashPassword(password);
+        dbHelper.addUser(name, email, hashedpass, role, phone);
         Toast.makeText(CreateAccount.this, "Create account successfully!", Toast.LENGTH_SHORT).show();
         finish();
     }

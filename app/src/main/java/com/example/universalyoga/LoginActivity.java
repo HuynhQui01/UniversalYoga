@@ -71,9 +71,6 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
-
-
-
     void Mapping(){
         edtUserName = findViewById(R.id.edtUserName);
         edtPassword = findViewById(R.id.edtPass);

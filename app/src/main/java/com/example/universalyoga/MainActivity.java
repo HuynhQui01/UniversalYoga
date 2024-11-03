@@ -1,7 +1,10 @@
 package com.example.universalyoga;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
@@ -27,6 +30,10 @@ public class MainActivity extends AppCompatActivity {
 
     private YogaDatabaseHelper dbHelper;
 
+    private final Handler handler = new Handler();
+    private final int SYNC_INTERVAL = 30 * 1000;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,8 +41,8 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         Mapping();
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
 
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new HomeFragment())
@@ -80,10 +87,30 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-
+        startDataSync();
 
 
         dbHelper = new YogaDatabaseHelper(this);
+    }
+
+    private void startDataSync() {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (isInternetAvailable()) {
+                    dbHelper.syncAllDataToFirebase();
+                    dbHelper.syncAllDataFromFirebaseToSQLite();
+
+                }
+                handler.postDelayed(this, SYNC_INTERVAL);
+            }
+        }, SYNC_INTERVAL);
+    }
+
+    private boolean isInternetAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
     @Override
