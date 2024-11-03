@@ -48,12 +48,7 @@ public class YogaClassWIthSessionAdapter extends RecyclerView.Adapter<YogaClassW
 
         sessionAdapter = new SessionAdapter(lstSession);
         holder.rcvSession.setAdapter(sessionAdapter);
-
-        holder.btnView.setOnClickListener(v ->{
-
-            holder.rcvSession.setVisibility(View.VISIBLE);
-        });
-
+        holder.rcvSession.setVisibility(View.INVISIBLE);
     }
 
     @Override
@@ -66,7 +61,6 @@ public class YogaClassWIthSessionAdapter extends RecyclerView.Adapter<YogaClassW
         TextView textViewClassTime;
         TextView txtViewCapacity;
         TextView txtDayOfWeek;
-        Button btnView;
         TextView txtPrice;
         TextView txtDes;
         RecyclerView rcvSession;
@@ -77,7 +71,6 @@ public class YogaClassWIthSessionAdapter extends RecyclerView.Adapter<YogaClassW
             textViewClassTime = itemView.findViewById(R.id.textViewClassTime);
             txtViewCapacity = itemView.findViewById(R.id.txtCapacity);
             txtDayOfWeek = itemView.findViewById(R.id.txtDayOfWeek);
-            btnView = itemView.findViewById(R.id.btnViewSession);
             txtPrice = itemView.findViewById(R.id.txtClassPrice);
             txtDes = itemView.findViewById(R.id.txtClassDescription);
             rcvSession = itemView.findViewById(R.id.rcvSession);
