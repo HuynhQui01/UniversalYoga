@@ -38,7 +38,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
         btnSave.setOnClickListener( v -> {
             try {
-                dbHelper.UpdateUser(user, edtPhone.getText().toString(), edtUserName.getText().toString());
+                dbHelper.updateUser(user, edtPhone.getText().toString(), edtUserName.getText().toString());
                 Toast.makeText(this, "Success to update profile", Toast.LENGTH_SHORT).show();
                 finish();
             }catch (Exception e){
@@ -49,7 +49,5 @@ public class EditProfileActivity extends AppCompatActivity {
         btnCancel.setOnClickListener(v -> {
             finish();
         });
-
-
     }
 }

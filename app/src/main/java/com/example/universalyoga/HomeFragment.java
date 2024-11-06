@@ -38,7 +38,7 @@ public class HomeFragment extends Fragment {
     private String mParam2;
 
     public HomeFragment() {
-        // Required empty public constructor
+
     }
 
     public static HomeFragment newInstance(String param1, String param2) {
@@ -87,14 +87,12 @@ public class HomeFragment extends Fragment {
             }
         };
         handler.post(runnable);
-
         return rootView;
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Stop the slideshow when the fragment view is destroyed
         handler.removeCallbacks(runnable);
     }
 }

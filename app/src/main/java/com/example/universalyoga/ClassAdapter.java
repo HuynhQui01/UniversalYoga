@@ -81,7 +81,6 @@ public class ClassAdapter extends RecyclerView.Adapter<ClassAdapter.ViewHolder>{
         return yogaClassList.size();
     }
 
-
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView textViewClassName;
         TextView textViewClassTime;

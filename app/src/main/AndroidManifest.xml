@@ -39,7 +39,7 @@
             android:name=".CreateClassActivity"
             android:exported="false" />
         <activity
-            android:name=".CreateAccount"
+            android:name=".CreateAccountActivity"
             android:exported="false" />
         <activity
             android:name=".LoginActivity"

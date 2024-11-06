@@ -41,12 +41,6 @@ public class SessionManger {
         editor.apply();
     }
 
-    // Method to get the user's email
-    public String getUserName(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getString(KEY_USER_NAME, ""); // Default is null if no value is set
-    }
-
     public void setUserEmail(Context context, String name) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -54,10 +48,8 @@ public class SessionManger {
         editor.apply();
     }
 
-
     public String getUserEmail(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         return sharedPreferences.getString(KEY_USER_EMAIL, ""); // Default is null if no value is set
     }
-
 }

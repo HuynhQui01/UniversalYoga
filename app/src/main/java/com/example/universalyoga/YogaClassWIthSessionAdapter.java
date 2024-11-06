@@ -36,7 +36,7 @@ public class YogaClassWIthSessionAdapter extends RecyclerView.Adapter<YogaClassW
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Yoga yogaClass = yogaClassList.get(position);
-        List<Session> lstSession = dbHelper.GetSessionByClassId(yogaClass.getId());
+        List<Session> lstSession = dbHelper.getSessionByClassId(yogaClass.getId());
         holder.textViewClassName.setText(yogaClass.getType());
         holder.textViewClassTime.setText( "Time: " + yogaClass.getTime());
         holder.txtViewCapacity.setText("Capacity: " + yogaClass.getCapacity());

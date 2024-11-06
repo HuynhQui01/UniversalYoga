@@ -42,11 +42,8 @@ public class CreateSessionActivity extends AppCompatActivity {
         List<String> lstInstructorName = GetInstructorName(lstInstructor);
         List<Yoga> lstYogaClasses = dbHelper.getAllYogaClasses();
         List<String> lstYogaName = GetYogaName(lstYogaClasses);
-
-
-
-
-        ArrayAdapter<String> classAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, lstYogaName);
+        ArrayAdapter<String> classAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, lstYogaName);
         classAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spYogaClass.setAdapter(classAdapter);
 
@@ -59,7 +56,8 @@ public class CreateSessionActivity extends AppCompatActivity {
                 edtCSDate.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        showLimitedDayDatePickerDialog(edtCSDate, ChangeDateOfWeek(selectedYogaClass.getDayOfWeek()));
+                        showLimitedDayDatePickerDialog(edtCSDate,
+                                ChangeDateOfWeek(selectedYogaClass.getDayOfWeek()));
                     }
                 });
             }
@@ -69,7 +67,8 @@ public class CreateSessionActivity extends AppCompatActivity {
             }
         });
 
-        ArrayAdapter<String> instructorAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, lstInstructorName);
+        ArrayAdapter<String> instructorAdapter = new ArrayAdapter<>(this,
+                            android.R.layout.simple_spinner_item, lstInstructorName);
         instructorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spInstructor.setAdapter(instructorAdapter);
 
@@ -86,10 +85,10 @@ public class CreateSessionActivity extends AppCompatActivity {
             }
         });
 
-
         btnCreate.setOnClickListener(v -> {
             try {
-                dbHelper.addClassInstance(edtCSDate.getText().toString(),instructorID,edtCSComment.getText().toString(), classId);
+                dbHelper.addSession(edtCSDate.getText().toString(),instructorID
+                        ,edtCSComment.getText().toString(), classId);
                 finish();
             }catch (Exception e){
                 Toast.makeText(this, "Fail to create new session", Toast.LENGTH_SHORT).show();
@@ -148,6 +147,12 @@ public class CreateSessionActivity extends AppCompatActivity {
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DAY_OF_MONTH);
 
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        long today = calendar.getTimeInMillis();
+
         DatePickerDialog datePickerDialog = new DatePickerDialog(editText.getContext(),
                 new DatePickerDialog.OnDateSetListener() {
                     @Override
@@ -161,13 +166,16 @@ public class CreateSessionActivity extends AppCompatActivity {
                             String selectedDate = dayOfMonth + "/" + (month + 1) + "/" + year;
                             editText.setText(selectedDate);
                         } else {
-                            Toast.makeText(CreateSessionActivity.this, "Please select a valid date for " + getDayName(allowedDay), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(CreateSessionActivity.this, "Please select a valid date for "
+                                    + getDayName(allowedDay), Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, year, month, day);
 
+        datePickerDialog.getDatePicker().setMinDate(today);
         datePickerDialog.show();
     }
+
 
     // Helper method to convert integer day to string
     private String getDayName(int dayOfWeek) {

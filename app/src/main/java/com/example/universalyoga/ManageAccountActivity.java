@@ -2,16 +2,11 @@ package com.example.universalyoga;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.ImageButton;
 import androidx.appcompat.widget.SearchView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -34,7 +29,6 @@ public class ManageAccountActivity extends AppCompatActivity {
 
         Mapping();
 
-
         try {
             lstUser = dbHelper.getAllUsers();
             filteredList = new ArrayList<>(lstUser);
@@ -48,7 +42,6 @@ public class ManageAccountActivity extends AppCompatActivity {
             searchView.setIconified(false);
             searchView.requestFocusFromTouch();
         });
-
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -65,7 +58,7 @@ public class ManageAccountActivity extends AppCompatActivity {
         });
 
         btnCreateAcc.setOnClickListener(v -> {
-            Intent createAcc = new Intent(this, CreateAccount.class);
+            Intent createAcc = new Intent(this, CreateAccountActivity.class);
             startActivity(createAcc);
         });
     }

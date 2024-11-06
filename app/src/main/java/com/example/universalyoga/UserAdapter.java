@@ -15,10 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder> {
-
     private List<User> userList;
-
-
     public UserAdapter(List<User> userList) {
         this.userList = userList;
     }
@@ -26,15 +23,12 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     @NonNull
     @Override
     public UserViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_user, parent, false);
         return new UserViewHolder(view);
-
     }
 
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
-
         User user = userList.get(holder.getAdapterPosition());
         holder.txtUserName.setText(user.getUsername());
         holder.txtUserEmail.setText(user.getEmail());
@@ -44,7 +38,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         holder.imgBtnEdit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Chuyển sang activity hoặc dialog để chỉnh sửa user
                 Intent intent = new Intent(v.getContext(), EditProfileActivity.class);
                 intent.putExtra("userEmail", user.getEmail());
                 v.getContext().startActivity(intent);
@@ -63,7 +56,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
                             public void onClick(DialogInterface dialog, int which) {
                                 YogaDatabaseHelper dbHelper = new YogaDatabaseHelper(v.getContext());
                                 dbHelper.deleteUserByEmail(user.getEmail());
-
                                 userList.remove(holder.getAdapterPosition());
                                 notifyItemRemoved(holder.getAdapterPosition());
                             }
@@ -79,7 +71,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     public int getItemCount() {
         return userList.size();
     }
-
 
     public static class UserViewHolder extends RecyclerView.ViewHolder {
         TextView txtUserName;

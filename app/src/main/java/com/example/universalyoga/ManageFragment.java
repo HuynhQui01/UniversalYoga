@@ -1,8 +1,8 @@
 package com.example.universalyoga;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Binder;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -20,17 +20,13 @@ import android.widget.Button;
 public class ManageFragment extends Fragment {
 
     Button btnManageAccount;
-    Button btnCreateClass;
-    Button btnCreateSession;
-    Button btnDelAcc;
-    Button btnDelClass;
-    Button btnDelSession;
-
+    Button btnManageClass;
+    Button btnManageSession;
+    Button btnManageResetData;
     SessionManger sessionManger;
     Context context;
     YogaDatabaseHelper dbHelper;
 
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
@@ -41,16 +37,6 @@ public class ManageFragment extends Fragment {
     public ManageFragment() {
         // Required empty public constructor
     }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ManageFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static ManageFragment newInstance(String param1, String param2) {
         ManageFragment fragment = new ManageFragment();
         Bundle args = new Bundle();
@@ -67,8 +53,6 @@ public class ManageFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
-
-
     }
 
     @Override
@@ -81,19 +65,27 @@ public class ManageFragment extends Fragment {
                 Intent manageAccount = new Intent(context, ManageAccountActivity.class);
                 startActivity(manageAccount);
             });
-        btnCreateClass.setOnClickListener(v -> {
+        btnManageClass.setOnClickListener(v -> {
             Intent manageClass = new Intent(context, ManageClassActivity.class);
             startActivity(manageClass);
         });
 
-        btnCreateSession.setOnClickListener(v ->{
+        btnManageSession.setOnClickListener(v ->{
             Intent manageSession = new Intent(context, ManageSessionActivity.class);
             startActivity(manageSession);
         });
+        btnManageResetData.setOnClickListener(v -> {
+            new AlertDialog.Builder(view.getContext())
+                    .setTitle("Confirm delete")
+                    .setMessage("Are you sure to delete all data?")
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        dbHelper.deleteAllDataOfFire();
+                        dbHelper.resetDataInSQLite();
 
-
-
-
+                    })
+                    .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                    .show();
+        });
         return view;
     }
 
@@ -102,12 +94,9 @@ public class ManageFragment extends Fragment {
         context = getContext();
         sessionManger = new SessionManger();
         btnManageAccount = view.findViewById(R.id.btnManageAccount);
-        btnCreateClass = view.findViewById(R.id.btnManageClass);
-        btnCreateSession = view.findViewById(R.id.btnCreateSession);
-        btnDelAcc = view.findViewById(R.id.btnDelUser);
-        btnDelClass = view.findViewById(R.id.btnDelClass);
-        btnDelSession = view.findViewById(R.id.btnDelSession);
+        btnManageClass = view.findViewById(R.id.btnManageClass);
+        btnManageSession = view.findViewById(R.id.btnCreateSession);
+        btnManageResetData = view.findViewById(R.id.btnManageReset);
         dbHelper = new YogaDatabaseHelper(context);
-
     }
 }

@@ -26,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     private SessionManger sessionManger;
-    private ImageButton btnLogin;
 
     private YogaDatabaseHelper dbHelper;
 
@@ -62,12 +61,14 @@ public class MainActivity extends AppCompatActivity {
                 } else if (item.getItemId() == R.id.nav_manage) {
                     if(dbHelper.getUserRoleByEmail(sessionManger.getUserEmail(MainActivity.this)) == null){
                         selectedFragment = new HomeFragment();
-                        Toast.makeText(MainActivity.this, "You do not have permission to go to this!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "You do not have permission to go to this!",
+                                Toast.LENGTH_SHORT).show();
                     }else{
                         if(dbHelper.getUserRoleByEmail(sessionManger.getUserEmail(MainActivity.this)).equals("admin")){
                             selectedFragment = new ManageFragment();
                         }else{
-                            Toast.makeText(MainActivity.this, "You do not have permission to go to this!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "You do not have permission to go to this!",
+                                    Toast.LENGTH_SHORT).show();
                             selectedFragment = new HomeFragment();
                         }
                     }
@@ -81,15 +82,10 @@ public class MainActivity extends AppCompatActivity {
                             .replace(R.id.fragment_container, selectedFragment)
                             .commit();
                 }
-
                 return true;
             }
         });
-
-
         startDataSync();
-
-
         dbHelper = new YogaDatabaseHelper(this);
     }
 
@@ -99,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 if (isInternetAvailable()) {
                     dbHelper.syncAllDataToFirebase();
-                    dbHelper.syncAllDataFromFirebaseToSQLite();
+                    dbHelper.syncUsersFromFirebase();
 
                 }
                 handler.postDelayed(this, SYNC_INTERVAL);
@@ -118,8 +114,6 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
     }
-
-
 
     private void Mapping() {
 

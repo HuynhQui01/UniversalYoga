@@ -34,7 +34,7 @@ public class EditSessionActivity extends AppCompatActivity {
 
         sessionId = getIntent().getIntExtra("SessionId", -1);
         dbHelper = new YogaDatabaseHelper(this);
-        session = dbHelper.GetSessionById(sessionId);
+        session = dbHelper.getSessionById(sessionId);
 
         if (session != null) {
             edtDate.setText(session.getDate());
@@ -53,7 +53,8 @@ public class EditSessionActivity extends AppCompatActivity {
         List<User> lstInstructor = dbHelper.getInstructors();
         List<String> lstInstructorName = GetInstructorName(lstInstructor);
 
-        ArrayAdapter<String> instructorAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, lstInstructorName);
+        ArrayAdapter<String> instructorAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, lstInstructorName);
         instructorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spInstructor.setAdapter(instructorAdapter);
 
@@ -94,7 +95,8 @@ public class EditSessionActivity extends AppCompatActivity {
                         String selectedDate = dayOfMonth + "/" + (month1 + 1) + "/" + year1;
                         editText.setText(selectedDate);
                     } else {
-                        Toast.makeText(EditSessionActivity.this, "Please select a valid date for " + getDayName(allowedDay), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(EditSessionActivity.this, "Please select a valid date for "
+                                + getDayName(allowedDay), Toast.LENGTH_SHORT).show();
                     }
                 }, year, month, day);
 

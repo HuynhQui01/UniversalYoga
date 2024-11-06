@@ -7,14 +7,13 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.database.FirebaseDatabase;
 
-public class CreateAccount extends AppCompatActivity {
+public class CreateAccountActivity extends AppCompatActivity {
 
     EditText edtEmail;
     EditText edtPass;
@@ -34,9 +33,7 @@ public class CreateAccount extends AppCompatActivity {
 
         Mapping();
 
-        // Khởi tạo database helper
         dbHelper = new YogaDatabaseHelper(this);
-
         btnCreate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -61,24 +58,18 @@ public class CreateAccount extends AppCompatActivity {
         });
 
     }
-
-
     private void registerUser(String name, String email, String password, String role, String phone) {
 
         if (dbHelper.getUsernameByEmail(email) != null) {
-            Toast.makeText(CreateAccount.this, "Email exists!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(CreateAccountActivity.this, "Email exists!", Toast.LENGTH_SHORT).show();
             return;
         }
         HashPass hash = new HashPass();
         String hashedpass = hash.hashPassword(password);
         dbHelper.addUser(name, email, hashedpass, role, phone);
-        Toast.makeText(CreateAccount.this, "Create account successfully!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(CreateAccountActivity.this, "Create account successfully!", Toast.LENGTH_SHORT).show();
         finish();
     }
-
-
-
-
     private boolean validateForm(String email, String password) {
         if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             edtEmail.setError("Invalid email!");
@@ -89,7 +80,6 @@ public class CreateAccount extends AppCompatActivity {
             edtPass.setError("Password must be more than 6");
             return false;
         }
-
         return true;
     }
 
@@ -107,5 +97,6 @@ public class CreateAccount extends AppCompatActivity {
                 R.array.roles_array, R.layout.textview_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spRole.setAdapter(adapter);
+        spRole.setSelection(1);
     }
 }

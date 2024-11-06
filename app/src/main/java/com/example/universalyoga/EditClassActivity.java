@@ -29,9 +29,7 @@ public class EditClassActivity extends AppCompatActivity {
 
         Mapping();
         int classId = getIntent().getIntExtra("ClassId", -1);
-
         Yoga currentYogaClass = dbHelper.getYogaClassById(classId);
-
 
         if (currentYogaClass != null) {
             edtTime.setText(currentYogaClass.getTime());
@@ -43,7 +41,6 @@ public class EditClassActivity extends AppCompatActivity {
             spDayOfWeek.setSelection(getIndexOfSpinner(spDayOfWeek, currentYogaClass.getDayOfWeek()));
         }
 
-
         boolean hasSessionRef = dbHelper.hasClassInstanceForYogaClass(classId);
 
         if (hasSessionRef) {
@@ -51,7 +48,6 @@ public class EditClassActivity extends AppCompatActivity {
             edtTime.setEnabled(true);
             edtDuration.setEnabled(true);
             edtDes.setEnabled(true);
-
 
             edtCapacity.setEnabled(false);
             edtPrice.setEnabled(false);
@@ -69,11 +65,8 @@ public class EditClassActivity extends AppCompatActivity {
         }
 
         edtTime.setOnClickListener(v -> showTimePickerDialog());
-
         btnCancel.setOnClickListener(v -> finish());
-
         btnSave.setOnClickListener(v -> {
-
             String time = edtTime.getText().toString();
             String durationStr = edtDuration.getText().toString();
 
@@ -99,7 +92,6 @@ public class EditClassActivity extends AppCompatActivity {
     }
 
     private void showTimePickerDialog() {
-
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int minute = calendar.get(Calendar.MINUTE);
@@ -121,7 +113,6 @@ public class EditClassActivity extends AppCompatActivity {
         }
         return 0;
     }
-
 
     void Mapping(){
         edtTime = findViewById(R.id.edtECTimeStart);

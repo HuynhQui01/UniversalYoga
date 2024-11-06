@@ -19,7 +19,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuthException;
+
 import androidx.annotation.NonNull;
+
 import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -30,8 +32,6 @@ public class LoginActivity extends AppCompatActivity {
     Button btnLogin;
     SessionManger sessionManger;
     YogaDatabaseHelper dbHelper;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,17 +48,15 @@ public class LoginActivity extends AppCompatActivity {
                 String email = edtUserName.getText().toString();
                 String password = edtPassword.getText().toString();
 
-
                 if (email.isEmpty() || password.isEmpty()) {
                     Toast.makeText(LoginActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-
-                if (dbHelper.checkUser(email, password)) {
+                if (dbHelper.checkUserForLogin(email, password)) {
 
                     sessionManger.saveLoginStatus(LoginActivity.this, true);
-                    sessionManger.setUserEmail(LoginActivity.this, email );
+                    sessionManger.setUserEmail(LoginActivity.this, email);
                     Toast.makeText(LoginActivity.this, "Login succesfully!", Toast.LENGTH_SHORT).show();
                     finish();
 
@@ -67,11 +65,9 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
         });
-
-
     }
 
-    void Mapping(){
+    void Mapping() {
         edtUserName = findViewById(R.id.edtUserName);
         edtPassword = findViewById(R.id.edtPass);
         btnLogin = findViewById(R.id.btnLogin);

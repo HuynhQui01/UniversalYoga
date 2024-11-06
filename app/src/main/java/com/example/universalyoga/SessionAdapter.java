@@ -29,14 +29,10 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        // Get the session at the current position
         Session session = lstSession.get(position);
-
         holder.txtDate.setText("Date start: " + session.getDate());
         holder.txtComment.setText("Comment: "+session.getComment());
         holder.txtInstructor.setText(dbHelper.getUserNameById(session.getInstructorId()));
-
-
     }
 
     @Override

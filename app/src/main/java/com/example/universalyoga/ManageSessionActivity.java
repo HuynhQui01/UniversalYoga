@@ -26,8 +26,6 @@ public class ManageSessionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_manage_session);
 
         Mapping();
-
-
         lstSession = dbHelper.getAllSession();
         manageSessionAdapter = new ManageSessionAdapter(lstSession);
         recyclerView.setAdapter(manageSessionAdapter);
@@ -36,7 +34,10 @@ public class ManageSessionActivity extends AppCompatActivity {
             Intent createSession = new Intent(this, CreateSessionActivity.class);
             startActivity(createSession);
         });
-
+        searchView.setOnClickListener( v ->{
+            searchView.setIconified(false);
+            searchView.requestFocusFromTouch();
+        });
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
